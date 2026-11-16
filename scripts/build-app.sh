@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 # Builds "Discord Apple Music.app" (universal: Apple Silicon + Intel), signed with a Developer ID.
 #
-#   macos/scripts/build-app.sh               build + sign + notarize + staple -> macos/dist/*.zip
-#   macos/scripts/build-app.sh --no-notarize build + sign only (local testing)
+#   scripts/build-app.sh               build + sign + notarize + staple -> dist/*.zip
+#   scripts/build-app.sh --no-notarize build + sign only (local testing)
+#
+# scripts/release.sh calls this; use it directly to build without publishing.
 #
 # Env:
-#   VERSION           app version (default: version in the repo's package.json)
+#   VERSION           app version (default: contents of the VERSION file)
 #   SIGNING_IDENTITY  codesign identity (default: first "Developer ID Application" in the keychain)
 #   NOTARY_PROFILE    notarytool keychain profile (default: discord-apple-music)
 set -euo pipefail
@@ -23,7 +25,8 @@ done
 fail() { echo "$*" >&2; exit 1; }
 
 APP_NAME="Discord Apple Music"
-VERSION="${VERSION:-$(node -p 'require("../package.json").version' 2>/dev/null || sed -n 's/.*"version": "\(.*\)".*/\1/p' ../package.json)}"
+VERSION="${VERSION:-$(tr -d '[:space:]' < VERSION)}"
+[[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail "Invalid version: '$VERSION'"
 NOTARY_PROFILE="${NOTARY_PROFILE:-discord-apple-music}"
 SIGNING_IDENTITY="${SIGNING_IDENTITY:-$(security find-identity -v -p codesigning \
     | sed -n 's/.*"\(Developer ID Application: .*\)"/\1/p' | head -1)}"

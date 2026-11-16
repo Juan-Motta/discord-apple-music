@@ -1,15 +1,15 @@
-# discord-apple-music
+# Discord Apple Music
 
 Show what you're playing in **Apple Music** on your Discord profile as **"Listening to Apple Music"**, the same way Spotify does: song, artist, album cover, a live progress bar, and links that open the track in Apple Music.
 
-macOS only. No Discord mods required: it talks to the regular Discord desktop app over its local Rich Presence socket.
+A small native macOS app (about 3 MB). No Discord mods required: it talks to the regular Discord desktop app over its local Rich Presence socket.
 
 ## Requirements
 
-- macOS 14 or later with the Music app (the command-line version needs Apple Silicon)
+- macOS 14 or later (Apple Silicon or Intel), with the Music app
 - Discord desktop app, running
 
-## Install the app
+## Install
 
 ```bash
 brew install --cask juan-motta/tap/discord-apple-music
@@ -17,7 +17,13 @@ brew install --cask juan-motta/tap/discord-apple-music
 
 Or download `DiscordAppleMusic-<version>-macos.zip` from [Releases](https://github.com/Juan-Motta/discord-apple-music/releases), unzip it and move **Discord Apple Music** to Applications.
 
-Open **Discord Apple Music** and turn on **Show in Discord**. It keeps working in the background after you close the window and starts at every login, with no menu bar or Dock icon. Open the app again to turn it off or change what's shown:
+The app is signed and notarized by Apple.
+
+## Use
+
+Open **Discord Apple Music** and turn on **Show in Discord**. It keeps working in the background after you close the window and starts at every login, with no menu bar or Dock icon.
+
+Open the app again to turn it off or change what's shown:
 
 - cover art
 - clickable song, artist and album
@@ -25,137 +31,65 @@ Open **Discord Apple Music** and turn on **Show in Discord**. It keeps working i
 - what the member list shows next to your name: song, artist or "Apple Music"
 - your own Discord application ID
 
-The app is signed and notarized by Apple, and weighs about 3 MB.
-
-## Command-line version
-
-The original Node.js version, for people who prefer a terminal. Use either the app or the command-line version, not both, or two copies will update your status.
-
-### Install with Homebrew
-
-```bash
-brew install juan-motta/tap/discord-apple-music
-```
-
-```bash
-brew services start discord-apple-music
-```
-
-`brew services` starts it now and at every login. Use it instead of `discord-apple-music install`, not both, or two copies will run. Logs go to `$(brew --prefix)/var/log/discord-apple-music.log`.
-
-### Install manually (no Node.js needed)
-
-1. Download `discord-apple-music-<version>-macos-arm64.zip` from [Releases](https://github.com/Juan-Motta/discord-apple-music/releases) and unzip it.
-2. Move the binary somewhere permanent, then install it as a login item:
-
-```bash
-mkdir -p ~/.local/bin && mv ~/Downloads/discord-apple-music ~/.local/bin/
-```
-
-```bash
-~/.local/bin/discord-apple-music install
-```
-
-The binary is signed and notarized by Apple. Other commands: `run` (foreground), `status`, `uninstall`.
-
-The login item points at the binary's location. If you move the binary later, run `install` again.
-
-### Run from source
-
-Requires Node.js 23.6 or newer, which runs the TypeScript sources directly.
-
-```bash
-git clone https://github.com/Juan-Motta/discord-apple-music.git
-cd discord-apple-music
-npm start
-```
-
-Play something in Apple Music and check your Discord profile. Press Ctrl+C to stop; the status clears.
-
-#### Start automatically at login (from source)
-
-```bash
-npm run agent:install     # install and start now
-npm run agent:status      # is it running?
-npm run agent:uninstall   # remove it
-```
-
-This installs a LaunchAgent (`~/Library/LaunchAgents/dev.discord-apple-music.plist`) that starts at login and restarts if it stops. Logs go to `~/Library/Logs/discord-apple-music.log`.
-
-The agent points at this folder and at the Node.js binary that ran the install. If you move the folder or switch Node versions (nvm, fnm), run `npm run agent:install` again.
-
 ## Permissions
 
-The first time it reads Apple Music, macOS asks whether **Discord Apple Music** (or `discord-apple-music` / `node` for the command-line version) may control **Music**. Click **Allow**.
+The first time it reads Apple Music, macOS asks whether **Discord Apple Music** may control **Music**. Click **Allow**.
 
-If you clicked Don't Allow, nothing shows in Discord. The app says "Allow access to Music" with a button that opens the right settings page; the command-line log says `Not allowed to control Music`. Enable it in **System Settings → Privacy & Security → Automation**. The command-line version also needs `install` run again.
+If you clicked Don't Allow, nothing shows in Discord and the app says "Allow access to Music". Click **Open Settings** and turn on Music under Discord Apple Music in **Privacy & Security → Automation**.
 
 ## How it behaves
 
 - **Paused or stopped:** the status disappears, like Spotify.
 - **Discord closed:** keeps waiting and reconnects when Discord opens.
-- **Updates:** only talks to Discord when the song changes, you pause, you seek, or the cover art arrives. The app reacts to Music's own play/pause notifications and checks every 15 seconds for seeks; the command-line version checks every 5 seconds.
+- **Updates:** reacts to Music's own play, pause and track-change notifications, and checks every 15 seconds for seeks. It only talks to Discord when something changed.
 - **Cover art and links:** looked up through the public iTunes Search API. Songs that aren't in the Apple Music catalog (your own uploads) show without a cover.
 - **The "Listen on Apple Music" button:** other people see it on your profile, but Discord never shows your own buttons to you. The song title, artist, and cover are also clickable links, and those you can see.
 
 ## Use your own Discord application
 
-By default it uses a shared Discord application named "Apple Music". To use your own name or icon, create an application at <https://discord.com/developers/applications> and paste its Application ID into the app, under **Advanced**. For the command-line version:
+By default it uses a shared Discord application named "Apple Music". To use your own name or icon, create an application at <https://discord.com/developers/applications> and paste its Application ID into the app, under **Advanced**.
+
+## Uninstall
 
 ```bash
-DISCORD_CLIENT_ID=<your application id> npm start
+brew uninstall --cask discord-apple-music
 ```
+
+If you installed it by hand, turn off **Show in Discord** first, then move the app to the Trash.
 
 ## Development
 
-```bash
-npm test
-```
+A Swift package, built with the Xcode Command Line Tools (no Xcode project needed):
 
 ```
-src/core/       pure logic: what to show and when to update (no macOS or Discord APIs)
-src/adapters/   Apple Music (JXA), Discord IPC, iTunes artwork, LaunchAgent
-src/app/run.ts  wires adapters into the sync loop
-src/cli.ts      run | install | uninstall | status
-```
-
-`src/core` has no platform dependencies, so it can be reused by other front ends, such as a Vencord user plugin.
-
-The app is a Swift package in `macos/`, built with the Command Line Tools (no Xcode project):
-
-```
-macos/Sources/PresenceCore/             pure logic, mirrors src/core
-macos/Sources/PresenceKit/              Apple Music (AppleScript), Discord IPC, iTunes artwork, settings
-macos/Sources/DiscordAppleMusicAgent/   background agent, packaged as a helper app inside the app
-macos/Sources/DiscordAppleMusic/        the SwiftUI window
+Sources/PresenceCore/             pure logic: what to show and when to update (no macOS APIs)
+Sources/PresenceKit/              Apple Music (AppleScript), Discord IPC, iTunes artwork, settings
+Sources/DiscordAppleMusicAgent/   background agent, packaged as a helper app inside the app
+Sources/DiscordAppleMusic/        the SwiftUI window
+Bundle/                           Info.plists, launchd plist, entitlements, icon
 ```
 
 ```bash
-cd macos && swift test
+swift test
 ```
 
 ```bash
-macos/scripts/build-app.sh --no-notarize   # universal, signed app -> macos/dist/
+scripts/build-app.sh --no-notarize   # universal, signed app -> dist/
 ```
 
-### Building a release
-
-A release ships both the app and the command-line binary. The command-line binary is a [Node.js single executable](https://nodejs.org/api/single-executable-applications.html): the sources bundled with esbuild and embedded into the Node.js binary, then signed with a Developer ID certificate and notarized.
+### Releasing
 
 ```bash
-npm install
-npm run build            # test, build and sign both -> dist/*.zip, macos/dist/*.zip (no notarization)
-npm run release          # same, plus Apple notarization
-npm run release:publish  # same, then tag, create the GitHub Release and update the Homebrew formula and cask
+scripts/release.sh               # test, build, sign and notarize -> dist/*.zip
+scripts/release.sh --publish     # same, then tag, create the GitHub Release and update the Homebrew cask
 ```
 
-To ship a new version, bump `version` in `package.json`, commit and push to `main`, then run `npm run release:publish`. It refuses to start unless the working tree is clean, `main` matches `origin/main`, and that version has no tag or release yet.
+To ship a new version, bump `VERSION`, commit and push to `main`, then run `scripts/release.sh --publish`. It refuses to start unless the working tree is clean, `main` matches `origin/main`, and that version has no tag or release yet.
 
-The tap step edits `Formula/discord-apple-music.rb` and `Casks/discord-apple-music.rb` in [Juan-Motta/homebrew-tap](https://github.com/Juan-Motta/homebrew-tap) through the GitHub API. To preview it without changing anything:
+The tap step edits `Casks/discord-apple-music.rb` in [Juan-Motta/homebrew-tap](https://github.com/Juan-Motta/homebrew-tap) through the GitHub API. To preview it without changing anything:
 
 ```bash
 scripts/update-tap.sh <version> <asset url> <sha256> --dry-run
-FORMULA_PATH=Casks/discord-apple-music.rb scripts/update-tap.sh <version> <asset url> <sha256> --dry-run
 ```
 
 Notarization needs a notarytool keychain profile, created once:
@@ -163,8 +97,6 @@ Notarization needs a notarytool keychain profile, created once:
 ```bash
 xcrun notarytool store-credentials discord-apple-music --apple-id <apple id> --team-id <team id>
 ```
-
-The command-line binary matches the architecture of the Node.js that builds it (`arm64` on Apple Silicon). The app is always universal (Apple Silicon and Intel).
 
 ## License
 

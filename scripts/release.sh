@@ -70,6 +70,7 @@ if [[ "$PUBLISH" == 1 ]]; then
 ## Install
 
 \`\`\`bash
+brew trust --cask juan-motta/tap/discord-apple-music
 brew install --cask juan-motta/tap/discord-apple-music
 \`\`\`
 

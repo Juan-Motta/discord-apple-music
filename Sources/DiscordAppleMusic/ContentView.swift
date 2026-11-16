@@ -87,7 +87,6 @@ struct ContentView: View {
 
 private struct TabBar: View {
     let tabs: TabSelection
-    @Namespace private var indicator
 
     var body: some View {
         HStack(spacing: 0) {
@@ -102,12 +101,16 @@ private struct TabBar: View {
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(selected ? .primary : .secondary)
-                .background {
-                    // One indicator that moves between buttons instead of appearing on each.
-                    if selected {
-                        SelectionCapsule().matchedGeometryEffect(id: "selection", in: indicator)
-                    }
-                }
+            }
+        }
+        .background(alignment: .leading) {
+            // One pill that only slides sideways, so layout changes elsewhere can't nudge it.
+            GeometryReader { proxy in
+                let width = proxy.size.width / CGFloat(Tab.allCases.count)
+                let index = CGFloat(Tab.allCases.firstIndex(of: tabs.tab) ?? 0)
+                SelectionCapsule()
+                    .frame(width: width, height: proxy.size.height)
+                    .offset(x: width * index)
             }
         }
         .padding(4)

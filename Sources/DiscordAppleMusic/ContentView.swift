@@ -75,6 +75,9 @@ struct ContentView: View {
         .padding(.top, 8)
         .frame(width: 400)
         .fixedSize(horizontal: false, vertical: true)
+        // While the window resizes to the new tab it is briefly taller than the content;
+        // keep the content at the top instead of centering it.
+        .frame(maxHeight: .infinity, alignment: .top)
         .onAppear { controller.refresh() }
         .task { await updater.check() }
     }

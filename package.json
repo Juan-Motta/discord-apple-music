@@ -1,0 +1,19 @@
+{
+  "name": "discord-apple-music",
+  "version": "0.1.0",
+  "description": "Show what you're playing in Apple Music as a Discord \"Listening to\" Rich Presence on macOS.",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "os": ["darwin"],
+  "scripts": {
+    "start": "node src/cli.ts run",
+    "agent:install": "node src/cli.ts install",
+    "agent:uninstall": "node src/cli.ts uninstall",
+    "agent:status": "node src/cli.ts status",
+    "test": "node --test test/"
+  },
+  "engines": {
+    "node": ">=23.6"
+  }
+}

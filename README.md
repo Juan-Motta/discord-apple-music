@@ -4,7 +4,18 @@
 
 Show what you're playing in **Apple Music** on your Discord profile as **"Listening to Apple Music"**, the same way Spotify does: song, artist, album cover, a live progress bar, and links that open the track in Apple Music.
 
-A small native macOS app (about 3 MB). No Discord mods required: it talks to the regular Discord desktop app over its local Rich Presence socket.
+![Discord Apple Music: the Presence tab with a live preview of the Discord card, and the About tab](docs/screenshot.png)
+
+A small native macOS app (about 5 MB). No Discord mods required: it talks to the regular Discord desktop app over its local Rich Presence socket.
+
+## Features
+
+- **"Listening to Apple Music"** on your profile, with cover art, a live progress bar and a "Listen on Apple Music" button
+- **Live preview** of your Discord card in the app, updated as you change the options
+- **Clickable** song, artist and album, like Spotify
+- **Runs in the background** with no menu bar or Dock icon, and optionally starts at login
+- **Updates itself** from GitHub Releases, after checking the download's signature
+- **English and Spanish**
 
 ## Requirements
 
@@ -25,7 +36,7 @@ The app is signed and notarized by Apple.
 
 Open **Discord Apple Music** and turn on **Show in Discord**. It keeps working in the background after you close the window, with no menu bar or Dock icon, and starts at every login unless you turn off **Start at login** (then it starts when you open the app).
 
-Open the app again to turn it off or change what's shown:
+Open the app again to turn it off or change what's shown. The card at the top previews your Discord profile and changes as you toggle:
 
 - cover art
 - clickable song, artist and album
@@ -65,7 +76,7 @@ Sources/PresenceCore/             pure logic: what to show and when to update (n
 Sources/PresenceKit/              Apple Music (AppleScript), Discord IPC, iTunes artwork, settings
 Sources/DiscordAppleMusicAgent/   background agent, packaged as a helper app inside the app
 Sources/DiscordAppleMusic/        the SwiftUI window
-Bundle/                           Info.plists, launchd plist, entitlements, icon
+Bundle/                           Info.plists, launchd plist, entitlements, icon, translations
 ```
 
 ```bash

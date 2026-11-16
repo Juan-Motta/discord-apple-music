@@ -5,3 +5,6 @@ dist/
 .codegraph/
 .atl/
 assets/
+.build/
+.swiftpm/
+*.app

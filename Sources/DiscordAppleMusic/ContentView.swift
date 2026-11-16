@@ -557,12 +557,13 @@ private extension View {
         }
     }
 
+    /// A prominent, pink-tinted button (the color of the donation heart).
     @ViewBuilder
     func glassButton() -> some View {
         if #available(macOS 26, *) {
-            buttonStyle(.glass).controlSize(.large)
+            buttonStyle(.glassProminent).tint(.pink).controlSize(.large)
         } else {
-            buttonStyle(.bordered).controlSize(.large)
+            buttonStyle(.borderedProminent).tint(.pink).controlSize(.large)
         }
     }
 }

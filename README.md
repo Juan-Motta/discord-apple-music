@@ -32,7 +32,7 @@ Open the app again to turn it off or change what's shown:
 - the "Listen on Apple Music" button
 - what the member list shows next to your name: song, artist or "Apple Music"
 
-The **About** tab shows the app's version. When a newer release is out, an **Update** button downloads it, checks that it's signed by the same developer, and restarts the app on the new version.
+The app is in English and Spanish; it follows your Mac's language, or pick one under **About → Language**. The **About** tab also has a link to report a bug, and shows the app's version. When a newer release is out, an **Update** button downloads it, checks that it's signed by the same developer, and restarts the app on the new version.
 
 ## Permissions
 
@@ -99,7 +99,7 @@ xcrun notarytool store-credentials discord-apple-music --apple-id <apple id> --t
 
 ## Support
 
-If you enjoy it, you can [buy me a coffee](https://buymeacoffee.com/jualopezmo). There's also a button in the app.
+If you enjoy it, you can [buy me a coffee](https://buymeacoffee.com/jualopezmo). There's also a **Make a donation** button in the app.
 
 ## License
 

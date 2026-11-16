@@ -31,7 +31,7 @@ final class UpdateController {
         do {
             state = try await UpdateFeed.check(current: current).map(State.available) ?? .upToDate
         } catch {
-            state = .failed("Couldn't check for updates.", nil)
+            state = .failed(String(localized: "Couldn't check for updates."), nil)
         }
     }
 

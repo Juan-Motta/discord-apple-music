@@ -1,0 +1,51 @@
+/* Tabs */
+"Presence" = "Presencia";
+"About" = "Acerca de";
+
+/* Presence */
+"Show in Discord" = "Mostrar en Discord";
+"Runs in the background, even with this window closed." = "Funciona en segundo plano, aunque cierres esta ventana.";
+"Start at login" = "Abrir al iniciar sesión";
+"Allow it in Login Items to start." = "Permítelo en Ítems de inicio para que arranque.";
+"Allow access to Music." = "Permite el acceso a Música.";
+"Open Settings" = "Abrir Ajustes";
+"Cover art" = "Carátula";
+"Clickable song, artist and album" = "Canción, artista y álbum con enlace";
+"“Listen on Apple Music” button" = "Botón “Listen on Apple Music”";
+"Member list shows" = "En la lista de miembros";
+"Song" = "Canción";
+"Artist" = "Artista";
+"Apple Music" = "Apple Music";
+"Make a donation" = "Hacer una donación";
+
+/* Discord card */
+"Listening to Apple Music" = "Escuchando Apple Music";
+"Discord preview" = "Vista previa de Discord";
+"Nothing is shown on your profile." = "No se muestra nada en tu perfil.";
+"Off" = "Apagado";
+"Waiting for Discord" = "Esperando a Discord";
+"No access to Music" = "Sin acceso a Música";
+"Nothing playing" = "No suena nada";
+
+/* About */
+"Your Apple Music, on your Discord profile." = "Tu Apple Music, en tu perfil de Discord.";
+"Version %@" = "Versión %@";
+"Check for Updates" = "Buscar actualizaciones";
+"Up to date" = "Actualizada";
+"Update to %@" = "Actualizar a %@";
+"Updating…" = "Actualizando…";
+"Download" = "Descargar";
+"Try Again" = "Reintentar";
+"Source code" = "Código fuente";
+"Found a problem?" = "¿Encontraste un problema?";
+"Report a bug" = "Reportar un error";
+"Language" = "Idioma";
+"System" = "Sistema";
+
+/* Errors */
+"Couldn't check for updates." = "No se pudo buscar actualizaciones.";
+"Can't replace the app in its folder. Download the update instead." = "No se puede reemplazar la app en su carpeta. Descarga la actualización.";
+"The download failed. Try again later." = "La descarga falló. Inténtalo más tarde.";
+"The download is not a valid app archive." = "La descarga no es un archivo de app válido.";
+"The download is not signed by this app's developer, so it was not installed." = "La descarga no está firmada por el desarrollador de esta app, así que no se instaló.";
+"Could not save settings: %@" = "No se pudieron guardar los ajustes: %@";

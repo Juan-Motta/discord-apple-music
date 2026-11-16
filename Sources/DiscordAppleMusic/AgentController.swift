@@ -28,7 +28,7 @@ final class AgentController {
                 DistributedNotificationCenter.default().postNotificationName(
                     AppStore.settingsChanged, object: nil, deliverImmediately: true)
             } catch {
-                lastError = "Could not save settings: \(error.localizedDescription)"
+                lastError = String(localized: "Could not save settings: \(error.localizedDescription)")
             }
         }
     }

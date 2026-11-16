@@ -65,6 +65,7 @@ cp "$PRODUCTS/DiscordAppleMusicAgent" "$HELPER/Contents/MacOS/"
 sed "s/__VERSION__/$VERSION/g" Bundle/Info.plist > "$APP/Contents/Info.plist"
 sed "s/__VERSION__/$VERSION/g" Bundle/AgentInfo.plist > "$HELPER/Contents/Info.plist"
 cp Bundle/AppIcon.icns "$APP/Contents/Resources/"
+cp -R Bundle/*.lproj "$APP/Contents/Resources/"
 cp Bundle/dev.discord-apple-music.agent.plist "$APP/Contents/Library/LaunchAgents/"
 plutil -lint -s "$APP/Contents/Info.plist" "$HELPER/Contents/Info.plist" "$APP/Contents/Library/LaunchAgents/"*.plist
 

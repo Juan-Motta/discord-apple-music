@@ -12,10 +12,10 @@ enum AppInstaller {
 
         var errorDescription: String? {
             switch self {
-            case .notWritable: "Can't replace the app in its folder. Download the update instead."
-            case .download: "The download failed. Try again later."
-            case .unpack: "The download is not a valid app archive."
-            case .untrusted: "The download is not signed by this app's developer, so it was not installed."
+            case .notWritable: String(localized: "Can't replace the app in its folder. Download the update instead.")
+            case .download: String(localized: "The download failed. Try again later.")
+            case .unpack: String(localized: "The download is not a valid app archive.")
+            case .untrusted: String(localized: "The download is not signed by this app's developer, so it was not installed.")
             }
         }
     }

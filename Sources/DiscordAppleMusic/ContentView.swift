@@ -5,7 +5,7 @@ import SwiftUI
 enum Tab: String, CaseIterable, Identifiable {
     case presence, about
     var id: Self { self }
-    var title: String {
+    var title: LocalizedStringKey {
         switch self {
         case .presence: "Presence"
         case .about: "About"
@@ -21,6 +21,23 @@ struct ContentView: View {
 
     static let donateURL = URL(string: "https://buymeacoffee.com/jualopezmo")!
     static let projectURL = URL(string: "https://github.com/Juan-Motta/discord-apple-music")!
+
+    /// A new GitHub issue with the app and macOS versions filled in.
+    static func bugReportURL(version: String) -> URL {
+        let body = """
+            **What happened?**
+
+
+            **What did you expect?**
+
+
+            ---
+            App \(version) · macOS \(ProcessInfo.processInfo.operatingSystemVersionString)
+            """
+        var components = URLComponents(string: "https://github.com/Juan-Motta/discord-apple-music/issues/new")!
+        components.queryItems = [URLQueryItem(name: "body", value: body)]
+        return components.url!
+    }
 
     var body: some View {
         VStack(spacing: 16) {
@@ -120,7 +137,7 @@ private struct PresenceTab: View {
 
             CustomizeSection(controller: controller)
             Link(destination: ContentView.donateURL) {
-                Label("Buy me a coffee", systemImage: "cup.and.saucer.fill")
+                Label("Make a donation", systemImage: "heart.fill")
                     .frame(maxWidth: .infinity)
             }
             .glassButton()
@@ -145,7 +162,7 @@ private struct StatusAction: View {
         }
     }
 
-    private func row(_ text: String, open: @escaping () -> Void) -> some View {
+    private func row(_ text: LocalizedStringKey, open: @escaping () -> Void) -> some View {
         VStack(spacing: 0) {
             Divider().padding(.horizontal, 14)
             HStack {
@@ -202,7 +219,8 @@ private struct DiscordCard: View {
             .frame(minHeight: 72)
 
             if settings.showButton, playing != nil {
-                Text("Listen on Apple Music")
+                // Verbatim: this is the label Discord shows to others, which is not translated.
+                Text(verbatim: "Listen on Apple Music")
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(Discord.text)
                     .frame(maxWidth: .infinity)
@@ -229,7 +247,7 @@ private struct DiscordCard: View {
         HoverLink(text: text, url: settings.clickableLinks ? url : nil, font: font, color: color)
     }
 
-    private var placeholder: String {
+    private var placeholder: LocalizedStringKey {
         switch status?.state {
         case nil: "Off"
         case .discordUnavailable?: "Waiting for Discord"
@@ -373,10 +391,10 @@ private struct CustomizeSection: View {
 }
 
 private struct OptionRow: View {
-    let title: String
+    let title: LocalizedStringKey
     @Binding var isOn: Bool
 
-    init(_ title: String, isOn: Binding<Bool>) {
+    init(_ title: LocalizedStringKey, isOn: Binding<Bool>) {
         self.title = title
         _isOn = isOn
     }
@@ -422,6 +440,25 @@ private struct AboutTab: View {
                     Link("GitHub", destination: ContentView.projectURL)
                 }
                 .padding(14)
+                Divider().padding(.horizontal, 14)
+                HStack {
+                    Text("Language")
+                    Spacer()
+                    Picker("Language", selection: Binding(get: { AppLanguage.current }, set: { AppLanguage.apply($0) })) {
+                        ForEach(AppLanguage.allCases) { $0.label.tag($0) }
+                    }
+                    .labelsHidden()
+                    .fixedSize()
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                Divider().padding(.horizontal, 14)
+                HStack {
+                    Text("Found a problem?")
+                    Spacer()
+                    Link("Report a bug", destination: ContentView.bugReportURL(version: updater.versionText))
+                }
+                .padding(14)
             }
             .glassPanel()
 
@@ -446,7 +483,7 @@ private struct UpdateRow: View {
                     Label("Up to date", systemImage: "checkmark.circle.fill")
                         .foregroundStyle(.secondary)
                 case .available(let update):
-                    Button("Update to \(update.version)") { Task { await updater.install(update) } }
+                    Button("Update to \(update.version.description)") { Task { await updater.install(update) } }
                         .buttonStyle(.borderedProminent)
                 case .installing:
                     ProgressView().controlSize(.small)

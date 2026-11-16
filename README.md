@@ -6,10 +6,32 @@ macOS only. No Discord mods required: it talks to the regular Discord desktop ap
 
 ## Requirements
 
-- macOS on Apple Silicon, with the Music app
+- macOS 14 or later with the Music app (the command-line version needs Apple Silicon)
 - Discord desktop app, running
 
-## Install with Homebrew
+## Install the app
+
+```bash
+brew install --cask juan-motta/tap/discord-apple-music
+```
+
+Or download `DiscordAppleMusic-<version>-macos.zip` from [Releases](https://github.com/Juan-Motta/discord-apple-music/releases), unzip it and move **Discord Apple Music** to Applications.
+
+Open **Discord Apple Music** and turn on **Show in Discord**. It keeps working in the background after you close the window and starts at every login, with no menu bar or Dock icon. Open the app again to turn it off or change what's shown:
+
+- cover art
+- clickable song, artist and album
+- the "Listen on Apple Music" button
+- what the member list shows next to your name: song, artist or "Apple Music"
+- your own Discord application ID
+
+The app is signed and notarized by Apple, and weighs about 3 MB.
+
+## Command-line version
+
+The original Node.js version, for people who prefer a terminal. Use either the app or the command-line version, not both, or two copies will update your status.
+
+### Install with Homebrew
 
 ```bash
 brew install juan-motta/tap/discord-apple-music
@@ -21,7 +43,7 @@ brew services start discord-apple-music
 
 `brew services` starts it now and at every login. Use it instead of `discord-apple-music install`, not both, or two copies will run. Logs go to `$(brew --prefix)/var/log/discord-apple-music.log`.
 
-## Install manually (no Node.js needed)
+### Install manually (no Node.js needed)
 
 1. Download `discord-apple-music-<version>-macos-arm64.zip` from [Releases](https://github.com/Juan-Motta/discord-apple-music/releases) and unzip it.
 2. Move the binary somewhere permanent, then install it as a login item:
@@ -38,7 +60,7 @@ The binary is signed and notarized by Apple. Other commands: `run` (foreground),
 
 The login item points at the binary's location. If you move the binary later, run `install` again.
 
-## Run from source
+### Run from source
 
 Requires Node.js 23.6 or newer, which runs the TypeScript sources directly.
 
@@ -50,7 +72,7 @@ npm start
 
 Play something in Apple Music and check your Discord profile. Press Ctrl+C to stop; the status clears.
 
-### Start automatically at login (from source)
+#### Start automatically at login (from source)
 
 ```bash
 npm run agent:install     # install and start now
@@ -64,21 +86,21 @@ The agent points at this folder and at the Node.js binary that ran the install. 
 
 ## Permissions
 
-The first time it reads Apple Music, macOS asks whether `discord-apple-music` (or `node`, when running from source) may control **Music**. Click **Allow**.
+The first time it reads Apple Music, macOS asks whether **Discord Apple Music** (or `discord-apple-music` / `node` for the command-line version) may control **Music**. Click **Allow**.
 
-If you clicked Don't Allow, nothing shows in Discord and the log says `Not allowed to control Music`. Enable it in **System Settings → Privacy & Security → Automation**, then run `install` again.
+If you clicked Don't Allow, nothing shows in Discord. The app says "Allow access to Music" with a button that opens the right settings page; the command-line log says `Not allowed to control Music`. Enable it in **System Settings → Privacy & Security → Automation**. The command-line version also needs `install` run again.
 
 ## How it behaves
 
 - **Paused or stopped:** the status disappears, like Spotify.
 - **Discord closed:** keeps waiting and reconnects when Discord opens.
-- **Updates:** checks Music every 5 seconds, but only talks to Discord when the song changes, you pause, you seek, or the cover art arrives.
+- **Updates:** only talks to Discord when the song changes, you pause, you seek, or the cover art arrives. The app reacts to Music's own play/pause notifications and checks every 15 seconds for seeks; the command-line version checks every 5 seconds.
 - **Cover art and links:** looked up through the public iTunes Search API. Songs that aren't in the Apple Music catalog (your own uploads) show without a cover.
 - **The "Listen on Apple Music" button:** other people see it on your profile, but Discord never shows your own buttons to you. The song title, artist, and cover are also clickable links, and those you can see.
 
 ## Use your own Discord application
 
-By default it uses a shared Discord application named "Apple Music". To use your own name or icon, create an application at <https://discord.com/developers/applications> and set its Application ID:
+By default it uses a shared Discord application named "Apple Music". To use your own name or icon, create an application at <https://discord.com/developers/applications> and paste its Application ID into the app, under **Advanced**. For the command-line version:
 
 ```bash
 DISCORD_CLIENT_ID=<your application id> npm start
@@ -99,23 +121,41 @@ src/cli.ts      run | install | uninstall | status
 
 `src/core` has no platform dependencies, so it can be reused by other front ends, such as a Vencord user plugin.
 
+The app is a Swift package in `macos/`, built with the Command Line Tools (no Xcode project):
+
+```
+macos/Sources/PresenceCore/             pure logic, mirrors src/core
+macos/Sources/PresenceKit/              Apple Music (AppleScript), Discord IPC, iTunes artwork, settings
+macos/Sources/DiscordAppleMusicAgent/   background agent, packaged as a helper app inside the app
+macos/Sources/DiscordAppleMusic/        the SwiftUI window
+```
+
+```bash
+cd macos && swift test
+```
+
+```bash
+macos/scripts/build-app.sh --no-notarize   # universal, signed app -> macos/dist/
+```
+
 ### Building a release
 
-The release is a [Node.js single executable](https://nodejs.org/api/single-executable-applications.html): the sources bundled with esbuild and embedded into the Node.js binary, then signed with a Developer ID certificate and notarized.
+A release ships both the app and the command-line binary. The command-line binary is a [Node.js single executable](https://nodejs.org/api/single-executable-applications.html): the sources bundled with esbuild and embedded into the Node.js binary, then signed with a Developer ID certificate and notarized.
 
 ```bash
 npm install
-npm run build            # test, bundle, build and sign -> dist/*.zip (no notarization)
+npm run build            # test, build and sign both -> dist/*.zip, macos/dist/*.zip (no notarization)
 npm run release          # same, plus Apple notarization
-npm run release:publish  # same, then tag, create the GitHub Release and update the Homebrew tap
+npm run release:publish  # same, then tag, create the GitHub Release and update the Homebrew formula and cask
 ```
 
 To ship a new version, bump `version` in `package.json`, commit and push to `main`, then run `npm run release:publish`. It refuses to start unless the working tree is clean, `main` matches `origin/main`, and that version has no tag or release yet.
 
-The tap step edits `Formula/discord-apple-music.rb` in [Juan-Motta/homebrew-tap](https://github.com/Juan-Motta/homebrew-tap) through the GitHub API. To preview it without changing anything:
+The tap step edits `Formula/discord-apple-music.rb` and `Casks/discord-apple-music.rb` in [Juan-Motta/homebrew-tap](https://github.com/Juan-Motta/homebrew-tap) through the GitHub API. To preview it without changing anything:
 
 ```bash
 scripts/update-tap.sh <version> <asset url> <sha256> --dry-run
+FORMULA_PATH=Casks/discord-apple-music.rb scripts/update-tap.sh <version> <asset url> <sha256> --dry-run
 ```
 
 Notarization needs a notarytool keychain profile, created once:
@@ -124,7 +164,7 @@ Notarization needs a notarytool keychain profile, created once:
 xcrun notarytool store-credentials discord-apple-music --apple-id <apple id> --team-id <team id>
 ```
 
-The binary matches the architecture of the Node.js that builds it (`arm64` on Apple Silicon).
+The command-line binary matches the architecture of the Node.js that builds it (`arm64` on Apple Silicon). The app is always universal (Apple Silicon and Intel).
 
 ## License
 

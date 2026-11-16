@@ -18,12 +18,12 @@ Branch: `feat/native-app`. Delivery: work-unit commits on the branch, merged by 
 
 | ID | Specs | Route | Status | Commit |
 | --- | --- | --- | --- | --- |
-| T1 | S4 | inline | pending | |
-| T2 | S3, S4 | inline | pending | |
-| T3 | S3, S5 | inline | pending | |
-| T4 | S1, S2, S6 | inline | pending | |
-| T5 | S5, S7 | inline | pending | |
-| T6 | S7 | inline | pending | |
+| T1 | S4 | inline | done | 73c7321 |
+| T2 | S3, S4 | inline | done | 3314951 |
+| T3 | S3, S5 | inline | done | 5424ab6 |
+| T4 | S1, S2, S6 | inline | done | 5291401 |
+| T5 | S5, S7 | inline | done | 2d16718, 79eb088, 38034f3, b0e7fdf |
+| T6 | S7 | inline | done (publish pending user approval) | see log L8 |
 
 T1 core logic in Swift + tests · T2 adapters (Music, Discord IPC, iTunes, config/status) · T3 background agent · T4 SwiftUI window + SMAppService · T5 bundle/sign/notarize, test on this Mac · T6 cask, release script, README.
 
@@ -35,3 +35,7 @@ Route: inline (no writer trigger: units are sequential and depend on each other)
 - L2 user: "no me gustaria tanto un icono arriba si no una app que se abra y que [ueda buscarla en applications para no llenar de basura la barra superior"
 - L3 user: "quiero que sea lo mas liviano posible" → option B (Swift rewrite) chosen; user: "si arranca".
 - L4 Environment: Swift 6.4.2 via Command Line Tools, no Xcode; swift-testing works; macOS 27.2 arm64. Engram mirror pending (mem_save blocked by a hook in auto mode).
+- L5 T5 live test: agent got -1743 with no prompt. Cause: macOS attributes the agent's Apple Events to the app (responsible process), which lacked the apple-events entitlement. Fix 79eb088; verified status "playing" and user confirmed: "si ya se ve".
+- L6 user (screenshot of several Dock icons): "por que aparecen tantos iconos". Cause: sending Apple Events registers the process as an app, and the agent inherited the main bundle's Foreground type. setActivationPolicy (38034f3) was not enough; b0e7fdf moves the agent into Contents/Library/LoginItems/DiscordAppleMusicAgent.app with LSBackgroundOnly, drops AppKit from the agent, and re-registers the agent once per app version. Verified type BackgroundOnly; user: "Yes, clean".
+- L7 Version bumped to 0.2.0. Notarized build accepted, stapled, spctl "Notarized Developer ID".
+- L8 T6: release.sh builds the app and uploads both zips; update-tap.sh also updates casks (version line); cask Casks/discord-apple-music.rb written in the tap (sha filled at publish); README documents the app first and the command-line version second.

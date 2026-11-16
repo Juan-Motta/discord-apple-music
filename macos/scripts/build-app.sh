@@ -40,7 +40,7 @@ echo "==> Testing"
 TEST_FLAGS=()
 PLUGINS="$(dirname "$(xcrun --find swift)")/../lib/swift/host/plugins/testing"
 [[ -d "$PLUGINS" ]] && TEST_FLAGS=(-Xswiftc -plugin-path -Xswiftc "$PLUGINS")
-if ! TEST_LOG="$(swift test "${TEST_FLAGS[@]}" 2>&1)"; then
+if ! TEST_LOG="$(swift test ${TEST_FLAGS[@]+"${TEST_FLAGS[@]}"} 2>&1)"; then
     echo "$TEST_LOG" | tail -30 >&2
     fail "Tests failed."
 fi

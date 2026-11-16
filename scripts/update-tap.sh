@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Points the Homebrew formula at a published release asset and commits it to the tap repo.
+# Points a Homebrew formula or cask at a published release asset and commits it to the tap repo.
 #
 #   scripts/update-tap.sh <version> <asset-url> <sha256> [--dry-run]
 #
@@ -8,7 +8,8 @@
 #
 # Env:
 #   TAP_REPO      tap repository (default: Juan-Motta/homebrew-tap)
-#   FORMULA_PATH  formula path inside the tap (default: Formula/discord-apple-music.rb)
+#   FORMULA_PATH  formula or cask path inside the tap (default: Formula/discord-apple-music.rb),
+#                 e.g. Casks/discord-apple-music.rb
 set -euo pipefail
 
 if [[ $# -lt 3 ]]; then
@@ -33,8 +34,10 @@ trap 'rm -rf "$WORK"' EXIT
 FILE_SHA="$(gh api "repos/$TAP_REPO/contents/$FORMULA_PATH" --jq .sha)"
 gh api "repos/$TAP_REPO/contents/$FORMULA_PATH" --jq .content | base64 -d > "$WORK/current.rb"
 
-# Replace only the first top-level `url` and `sha256` lines (the release asset).
-awk -v url="$ASSET_URL" -v sha="$SHA256" '
+# Replace only the first top-level `url` and `sha256` lines (the release asset), and a
+# top-level `version` line if there is one (casks have it; the formula infers it from the url).
+awk -v url="$ASSET_URL" -v sha="$SHA256" -v ver="$VERSION" '
+    !v && /^  version "/ { print "  version \"" ver "\""; v = 1; next }
     !u && /^  url "/    { print "  url \"" url "\""; u = 1; next }
     !s && /^  sha256 "/ { print "  sha256 \"" sha "\""; s = 1; next }
     { print }
@@ -54,7 +57,7 @@ if [[ "$DRY_RUN" == 1 ]]; then
 fi
 
 gh api --method PUT "repos/$TAP_REPO/contents/$FORMULA_PATH" \
-    -f message="feat: update discord-apple-music to $VERSION" \
+    -f message="feat: update $FORMULA_PATH to $VERSION" \
     -f content="$(base64 < "$WORK/next.rb" | tr -d '\n')" \
     -f sha="$FILE_SHA" \
     --jq '"Tap updated: " + .commit.html_url'

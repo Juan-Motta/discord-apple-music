@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# Builds a signed standalone macOS binary, and optionally notarizes and publishes it.
+# Builds the signed command-line binary and the "Discord Apple Music" app, and optionally
+# notarizes and publishes them.
 #
-#   scripts/release.sh               build + sign + notarize -> dist/*.zip
+#   scripts/release.sh               build + sign + notarize -> dist/*.zip, macos/dist/*.zip
 #   scripts/release.sh --no-notarize build + sign only (local testing)
 #   scripts/release.sh --publish     build + sign + notarize, then tag v<version>, create the
-#                                    GitHub Release and point the Homebrew tap at it
+#                                    GitHub Release and point the Homebrew formula and cask at it
 #
 # The version comes from package.json. --publish requires a clean main that matches origin/main
 # and a version that has not been released yet.
@@ -93,6 +94,15 @@ fi
 
 SHA256="$(shasum -a 256 "$ZIP" | cut -d' ' -f1)"
 
+echo "==> Building the app"
+APP_FLAGS=()
+[[ "$NOTARIZE" == 0 ]] && APP_FLAGS=(--no-notarize)
+VERSION="$VERSION" macos/scripts/build-app.sh ${APP_FLAGS[@]+"${APP_FLAGS[@]}"}
+APP_ZIP_NAME="DiscordAppleMusic-$VERSION-macos.zip"
+APP_ZIP="macos/dist/$APP_ZIP_NAME"
+[[ -f "$APP_ZIP" ]] || fail "App build did not produce $APP_ZIP"
+APP_SHA256="$(shasum -a 256 "$APP_ZIP" | cut -d' ' -f1)"
+
 if [[ "$PUBLISH" == 1 ]]; then
     echo "==> Tagging $TAG"
     git tag -a "$TAG" -m "$TAG"
@@ -102,24 +112,41 @@ if [[ "$PUBLISH" == 1 ]]; then
     NOTES="$(mktemp)"
     trap 'rm -f "$NOTES"' EXIT
     cat > "$NOTES" <<EOF
-## Install
+## App (recommended)
+
+\`\`\`bash
+brew install --cask juan-motta/tap/$NAME
+\`\`\`
+
+Or download \`$APP_ZIP_NAME\` below and move **Discord Apple Music** to Applications. Open it and turn on "Show in Discord". Requires macOS 14 or later (Apple Silicon or Intel).
+
+## Command line
 
 \`\`\`bash
 brew install juan-motta/tap/$NAME
 brew services start $NAME
 \`\`\`
 
-Or download \`$ZIP_NAME\` below, move the binary somewhere permanent and run \`$NAME install\`.
+Or download \`$ZIP_NAME\` below, move the binary somewhere permanent and run \`$NAME install\`. Apple Silicon only.
 
-Requires macOS on Apple Silicon and the Discord desktop app. Signed with a Developer ID certificate and notarized by Apple.
+Use one or the other, not both. Both require the Discord desktop app and are signed with a Developer ID certificate and notarized by Apple.
 
-**SHA-256:** \`$SHA256\`
+**SHA-256**
+- \`$APP_ZIP_NAME\`: \`$APP_SHA256\`
+- \`$ZIP_NAME\`: \`$SHA256\`
 EOF
-    gh release create "$TAG" "$ZIP" --repo "$REPO" --title "$TAG" --notes-file "$NOTES" --verify-tag
+    gh release create "$TAG" "$APP_ZIP" "$ZIP" --repo "$REPO" --title "$TAG" --notes-file "$NOTES" --verify-tag
 
     echo "==> Updating Homebrew tap"
     scripts/update-tap.sh "$VERSION" "https://github.com/$REPO/releases/download/$TAG/$ZIP_NAME" "$SHA256"
+    APP_URL="https://github.com/$REPO/releases/download/$TAG/$APP_ZIP_NAME"
+    if gh api "repos/${TAP_REPO:-Juan-Motta/homebrew-tap}/contents/Casks/$NAME.rb" >/dev/null 2>&1; then
+        FORMULA_PATH="Casks/$NAME.rb" scripts/update-tap.sh "$VERSION" "$APP_URL" "$APP_SHA256"
+    else
+        echo "The tap has no Casks/$NAME.rb yet; add it with version $VERSION, url $APP_URL, sha256 $APP_SHA256"
+    fi
 fi
 
 echo "==> Done"
+echo "$APP_SHA256  $APP_ZIP"
 echo "$SHA256  $ZIP"

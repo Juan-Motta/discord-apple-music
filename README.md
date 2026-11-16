@@ -1,5 +1,7 @@
 # Discord Apple Music
 
+[![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/jualopezmo)
+
 Show what you're playing in **Apple Music** on your Discord profile as **"Listening to Apple Music"**, the same way Spotify does: song, artist, album cover, a live progress bar, and links that open the track in Apple Music.
 
 A small native macOS app (about 3 MB). No Discord mods required: it talks to the regular Discord desktop app over its local Rich Presence socket.
@@ -97,6 +99,10 @@ Notarization needs a notarytool keychain profile, created once:
 ```bash
 xcrun notarytool store-credentials discord-apple-music --apple-id <apple id> --team-id <team id>
 ```
+
+## Support
+
+If you enjoy it, you can [buy me a coffee](https://buymeacoffee.com/jualopezmo). There's also a button at the bottom of the app.
 
 ## License
 

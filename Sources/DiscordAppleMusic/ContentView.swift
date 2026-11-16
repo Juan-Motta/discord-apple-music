@@ -5,6 +5,8 @@ import SwiftUI
 struct ContentView: View {
     @Bindable var controller: AgentController
 
+    static let donateURL = URL(string: "https://buymeacoffee.com/jualopezmo")!
+
     var body: some View {
         Form {
             Section {
@@ -43,6 +45,16 @@ struct ContentView: View {
                 Text("Use your own Discord application to change the name or icon shown in Discord.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+            }
+
+            Section {
+                HStack {
+                    Text("Enjoying it?")
+                    Spacer()
+                    Link(destination: Self.donateURL) {
+                        Label("Buy me a coffee", systemImage: "cup.and.saucer.fill")
+                    }
+                }
             }
         }
         .formStyle(.grouped)

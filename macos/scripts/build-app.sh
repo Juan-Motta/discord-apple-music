@@ -67,7 +67,10 @@ echo "==> Signing as: $SIGNING_IDENTITY"
 codesign --force --options runtime --timestamp --sign "$SIGNING_IDENTITY" \
     --identifier dev.discord-apple-music.agent --entitlements Bundle/Agent.entitlements \
     "$APP/Contents/MacOS/DiscordAppleMusicAgent"
-codesign --force --options runtime --timestamp --sign "$SIGNING_IDENTITY" "$APP"
+# macOS attributes the agent's Apple Events to this app (its "responsible" process), so it needs
+# the entitlement too; without it the request is denied with no prompt (-1743).
+codesign --force --options runtime --timestamp --sign "$SIGNING_IDENTITY" \
+    --entitlements Bundle/Agent.entitlements "$APP"
 codesign --verify --deep --strict "$APP"
 
 if [[ "$NOTARIZE" == 1 ]]; then

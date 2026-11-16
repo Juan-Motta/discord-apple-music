@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Embedded into the agent binary (__TEXT,__info_plist) so macOS can name it in the
+     "control Music" permission prompt. -->
+<plist version="1.0">
+<dict>
+    <key>CFBundleIdentifier</key>
+    <string>dev.discord-apple-music.agent</string>
+    <key>CFBundleName</key>
+    <string>Discord Apple Music</string>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>Reads the song playing in Music to show it in Discord.</string>
+</dict>
+</plist>

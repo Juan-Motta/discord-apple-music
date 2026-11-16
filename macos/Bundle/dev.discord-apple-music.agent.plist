@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Registered by the app through SMAppService.agent(plistName:). -->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>dev.discord-apple-music.agent</string>
+    <key>BundleProgram</key>
+    <string>Contents/MacOS/DiscordAppleMusicAgent</string>
+    <key>AssociatedBundleIdentifiers</key>
+    <array>
+        <string>dev.discord-apple-music</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <!-- Restart after a crash, but not after a clean exit (turning it off sends SIGTERM). -->
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+    </dict>
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+    <key>ProcessType</key>
+    <string>Background</string>
+</dict>
+</plist>

@@ -7,10 +7,11 @@ struct DiscordAppleMusicApp: App {
     // Not @State: SwiftUI's macro plugin ships only with Xcode, and the App is created once anyway.
     private let controller = AgentController()
     private let updater = UpdateController()
+    private let tabs = TabSelection()
 
     var body: some Scene {
         Window("Discord Apple Music", id: "main") {
-            ContentView(controller: controller, updater: updater)
+            ContentView(controller: controller, updater: updater, tabs: tabs)
         }
         .windowResizability(.contentSize)
     }

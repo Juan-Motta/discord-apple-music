@@ -13,11 +13,30 @@ enum Tab: String, CaseIterable, Identifiable {
     }
 }
 
+/// The selected tab. Kept in an observable model (not @State, whose macro needs Xcode) so that
+/// changing it inside `withAnimation` animates the indicator and the content.
+@MainActor
+@Observable
+final class TabSelection {
+    private static let key = "selectedTab"
+
+    private(set) var tab = Tab(rawValue: UserDefaults.standard.string(forKey: key) ?? "") ?? .presence
+    /// The side the new tab's content slides in from.
+    private(set) var edge = Edge.trailing
+
+    func select(_ next: Tab) {
+        guard next != tab else { return }
+        let order = Tab.allCases
+        edge = order.firstIndex(of: next)! > order.firstIndex(of: tab)! ? .trailing : .leading
+        withAnimation(.spring(duration: 0.4, bounce: 0.15)) { tab = next }
+        UserDefaults.standard.set(next.rawValue, forKey: Self.key)
+    }
+}
+
 struct ContentView: View {
     @Bindable var controller: AgentController
     let updater: UpdateController
-    // @AppStorage instead of @State: SwiftUI's macro plugin ships only with Xcode.
-    @AppStorage("selectedTab") private var tab = Tab.presence
+    let tabs: TabSelection
 
     static let donateURL = URL(string: "https://buymeacoffee.com/jualopezmo")!
     static let projectURL = URL(string: "https://github.com/Juan-Motta/discord-apple-music")!
@@ -41,16 +60,16 @@ struct ContentView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            TabBar(selection: $tab)
-            Group {
-                switch tab {
+            TabBar(tabs: tabs)
+            ZStack {
+                switch tabs.tab {
                 case .presence: PresenceTab(controller: controller)
                 case .about: AboutTab(updater: updater)
                 }
             }
-            .transition(.blurReplace)
+            .transition(.push(from: tabs.edge))
+            .id(tabs.tab)
         }
-        .animation(.smooth(duration: 0.35), value: tab)
         .padding(.horizontal, 20)
         .padding(.bottom, 20)
         .padding(.top, 8)
@@ -64,42 +83,41 @@ struct ContentView: View {
 // MARK: - Tab bar
 
 private struct TabBar: View {
-    @Binding var selection: Tab
-    @Namespace private var glass
+    let tabs: TabSelection
+    @Namespace private var indicator
 
     var body: some View {
-        if #available(macOS 26, *) {
-            GlassEffectContainer(spacing: 0) {
-                HStack(spacing: 0) {
-                    ForEach(Tab.allCases) { tab in
-                        Button { selection = tab } label: {
-                            Text(tab.title)
-                                .font(.callout.weight(selection == tab ? .semibold : .regular))
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 7)
-                                .contentShape(.capsule)
-                        }
-                        .buttonStyle(.plain)
-                        .foregroundStyle(selection == tab ? .primary : .secondary)
-                        .background {
-                            if selection == tab {
-                                Capsule()
-                                    .fill(.clear)
-                                    .glassEffect(.regular.interactive(), in: .capsule)
-                                    .glassEffectID("selection", in: glass)
-                            }
-                        }
+        HStack(spacing: 0) {
+            ForEach(Tab.allCases) { tab in
+                let selected = tabs.tab == tab
+                Button { tabs.select(tab) } label: {
+                    Text(tab.title)
+                        .font(.callout.weight(selected ? .semibold : .regular))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 7)
+                        .contentShape(.capsule)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(selected ? .primary : .secondary)
+                .background {
+                    // One indicator that moves between buttons instead of appearing on each.
+                    if selected {
+                        SelectionCapsule().matchedGeometryEffect(id: "selection", in: indicator)
                     }
                 }
-                .padding(4)
-                .glassEffect(.regular, in: .capsule)
             }
+        }
+        .padding(4)
+        .glassCapsule()
+    }
+}
+
+private struct SelectionCapsule: View {
+    var body: some View {
+        if #available(macOS 26, *) {
+            Capsule().fill(.clear).glassEffect(.regular.interactive(), in: .capsule)
         } else {
-            Picker("", selection: $selection) {
-                ForEach(Tab.allCases) { Text($0.title).tag($0) }
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
+            Capsule().fill(.background).shadow(color: .black.opacity(0.12), radius: 2, y: 1)
         }
     }
 }
@@ -513,6 +531,15 @@ private extension View {
             panel.glassEffect(.regular, in: .rect(cornerRadius: 16))
         } else {
             panel.background(.regularMaterial, in: .rect(cornerRadius: 16))
+        }
+    }
+
+    @ViewBuilder
+    func glassCapsule() -> some View {
+        if #available(macOS 26, *) {
+            glassEffect(.regular, in: .capsule)
+        } else {
+            background(.regularMaterial, in: .capsule)
         }
     }
 

@@ -92,3 +92,27 @@ import Testing
         #expect(store.loadStatus() == status)
     }
 }
+
+@Suite struct StatusForTheApp {
+    @Test func playingStatusCarriesWhatDiscordShows() throws {
+        let track = Track(id: "A", title: "Song", artist: "Artist", album: "Album", duration: 200)
+        let artwork = Artwork(imageURL: "https://img/x.jpg", trackURL: nil, artistURL: nil, albumURL: nil)
+        let activity = try #require(makeActivity(
+            .playing(track, position: 30), artwork: artwork, now: Date(timeIntervalSince1970: 1_000), settings: Settings()))
+        let status = AgentStatus.playing(activity)
+        #expect(status.state == .playing)
+        #expect(status.title == "Song")
+        #expect(status.artist == "Artist")
+        #expect(status.album == "Album")
+        #expect(status.artworkURL == "https://img/x.jpg")
+        #expect(status.startedAt == Date(timeIntervalSince1970: 970))
+        #expect(status.endsAt == Date(timeIntervalSince1970: 1_170))
+    }
+
+    @Test func readsStatusFilesWrittenBeforeTheseFields() throws {
+        let old = Data(#"{"state":"playing","title":"Song","artist":"Artist","updatedAt":0}"#.utf8)
+        let status = try JSONDecoder().decode(AgentStatus.self, from: old)
+        #expect(status.title == "Song")
+        #expect(status.artworkURL == nil)
+    }
+}

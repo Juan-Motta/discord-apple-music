@@ -74,7 +74,7 @@ final class Agent {
             if music.access == .denied {
                 status = AgentStatus(state: .musicAccessDenied)
             } else if let current = await sync.current {
-                status = AgentStatus(state: .playing, title: current.details, artist: current.state)
+                status = .playing(current)
             } else {
                 status = AgentStatus(state: .idle)
             }

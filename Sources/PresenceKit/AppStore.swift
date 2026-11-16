@@ -13,13 +13,38 @@ public struct AgentStatus: Codable, Equatable, Sendable {
     public var state: State
     public var title: String?
     public var artist: String?
+    /// What Discord shows while playing, so the app can preview the card.
+    public var album: String?
+    public var artworkURL: String?
+    public var startedAt: Date?
+    public var endsAt: Date?
     public var updatedAt: Date
 
-    public init(state: State, title: String? = nil, artist: String? = nil, updatedAt: Date = Date()) {
+    public init(
+        state: State, title: String? = nil, artist: String? = nil, album: String? = nil,
+        artworkURL: String? = nil, startedAt: Date? = nil, endsAt: Date? = nil, updatedAt: Date = Date()
+    ) {
         self.state = state
         self.title = title
         self.artist = artist
+        self.album = album
+        self.artworkURL = artworkURL
+        self.startedAt = startedAt
+        self.endsAt = endsAt
         self.updatedAt = updatedAt
+    }
+
+    /// The status for an activity being shown in Discord.
+    public static func playing(_ activity: Activity) -> AgentStatus {
+        let date = { (ms: Int64) in Date(timeIntervalSince1970: TimeInterval(ms) / 1000) }
+        return AgentStatus(
+            state: .playing,
+            title: activity.details.trimmingCharacters(in: .whitespaces),
+            artist: activity.state.trimmingCharacters(in: .whitespaces),
+            album: activity.assets?.largeText,
+            artworkURL: activity.assets?.largeImage,
+            startedAt: activity.timestamps.map { date($0.start) },
+            endsAt: activity.timestamps.map { date($0.end) })
     }
 }
 

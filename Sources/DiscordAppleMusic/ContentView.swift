@@ -145,6 +145,7 @@ private struct PresenceTab: View {
                     Spacer()
                     Toggle("Show in Discord", isOn: Binding(get: { controller.isOn }, set: { controller.setOn($0) }))
                         .toggleStyle(.switch)
+                        .tint(.green)
                         .labelsHidden()
                 }
                 .padding(14)

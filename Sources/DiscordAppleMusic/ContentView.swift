@@ -36,7 +36,7 @@ struct ContentView: View {
         .animation(.smooth(duration: 0.35), value: tab)
         .padding(.horizontal, 20)
         .padding(.bottom, 20)
-        .padding(.top, 32) // clears the window buttons; the title bar is hidden
+        .padding(.top, 8)
         .frame(width: 400)
         .fixedSize(horizontal: false, vertical: true)
         .onAppear { controller.refresh() }

@@ -11,9 +11,7 @@ struct DiscordAppleMusicApp: App {
     var body: some Scene {
         Window("Discord Apple Music", id: "main") {
             ContentView(controller: controller, updater: updater)
-                .translucentWindow()
         }
-        .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentSize)
     }
 }
@@ -22,16 +20,4 @@ struct DiscordAppleMusicApp: App {
 /// The presence keeps running because the background agent is a separate process.
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
-}
-
-private extension View {
-    /// Lets the desktop show through the window, so the glass panels have something to refract.
-    @ViewBuilder
-    func translucentWindow() -> some View {
-        if #available(macOS 15, *) {
-            containerBackground(.thinMaterial, for: .window)
-        } else {
-            self
-        }
-    }
 }

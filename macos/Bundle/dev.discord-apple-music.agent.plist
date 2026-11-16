@@ -6,7 +6,7 @@
     <key>Label</key>
     <string>dev.discord-apple-music.agent</string>
     <key>BundleProgram</key>
-    <string>Contents/MacOS/DiscordAppleMusicAgent</string>
+    <string>Contents/Library/LoginItems/DiscordAppleMusicAgent.app/Contents/MacOS/DiscordAppleMusicAgent</string>
     <key>AssociatedBundleIdentifiers</key>
     <array>
         <string>dev.discord-apple-music</string>

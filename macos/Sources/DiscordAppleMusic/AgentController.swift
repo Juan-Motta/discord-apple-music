@@ -34,6 +34,7 @@ final class AgentController {
     init() {
         settings = store.loadSettings()
         refresh()
+        Task { await reregisterAfterUpdate() }
         DistributedNotificationCenter.default().addObserver(
             forName: AppStore.statusChanged, object: nil, queue: .main
         ) { [weak self] _ in
@@ -54,9 +55,27 @@ final class AgentController {
         do {
             if on {
                 try service.register()
+                UserDefaults.standard.set(
+                    Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion"), forKey: "registeredAgentVersion")
             } else {
                 try service.unregister()
             }
+        } catch {
+            lastError = error.localizedDescription
+        }
+        refresh()
+    }
+
+    /// launchd keeps the agent definition from the version that registered it, so after an
+    /// update it could point at an outdated layout. Re-registering once per version refreshes it.
+    private func reregisterAfterUpdate() async {
+        let key = "registeredAgentVersion"
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? ""
+        guard isOn, UserDefaults.standard.string(forKey: key) != version else { return }
+        do {
+            try await service.unregister()
+            try service.register()
+            UserDefaults.standard.set(version, forKey: key)
         } catch {
             lastError = error.localizedDescription
         }

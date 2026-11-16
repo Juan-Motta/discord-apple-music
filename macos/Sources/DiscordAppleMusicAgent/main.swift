@@ -1,4 +1,4 @@
-import AppKit
+import Foundation
 import PresenceCore
 import PresenceKit
 
@@ -103,10 +103,6 @@ final class Agent {
         report(AgentStatus(state: .idle))
     }
 }
-
-// The agent lives inside the app bundle, so macOS would otherwise register it as another
-// "Discord Apple Music" app with its own Dock icon. It never shows UI.
-NSApplication.shared.setActivationPolicy(.prohibited)
 
 let agent = Agent()
 agent.start()

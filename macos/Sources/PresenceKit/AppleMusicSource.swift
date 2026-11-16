@@ -1,4 +1,4 @@
-import AppKit
+import Foundation
 import PresenceCore
 
 public enum MusicAccess: Sendable {
@@ -11,7 +11,6 @@ public enum MusicAccess: Sendable {
 public final class AppleMusicSource: PlayerSource, @unchecked Sendable {
     static let separator = "\u{1F}" // ASCII unit separator: never appears in titles
     static let notAuthorized = -1743
-    private static let bundleID = "com.apple.Music"
 
     // Numbers are returned as integer milliseconds: AppleScript formats reals with the
     // system locale ("208,5" in Spanish), which would not parse reliably.
@@ -39,11 +38,10 @@ public final class AppleMusicSource: PlayerSource, @unchecked Sendable {
     public var access: MusicAccess { lock.withLock { lastAccess } }
 
     public func read() async -> PlaybackSnapshot {
-        // Checking first avoids sending Apple Events (and a permission prompt) while Music is closed.
-        guard !NSRunningApplication.runningApplications(withBundleIdentifier: Self.bundleID).isEmpty else {
-            return .idle
-        }
-        return await MainActor.run { self.execute() }
+        // The script checks `is running` first (answered locally, no Apple Event), so a closed Music
+        // is never launched. AppKit is avoided on purpose: using it would register the agent as an
+        // app and give it a Dock icon.
+        await MainActor.run { self.execute() }
     }
 
     @MainActor

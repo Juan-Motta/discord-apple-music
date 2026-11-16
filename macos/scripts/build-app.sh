@@ -55,18 +55,20 @@ done
 
 echo "==> Assembling $APP_NAME.app $VERSION"
 rm -rf "$DIST"
-mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$APP/Contents/Library/LaunchAgents"
-cp "$PRODUCTS/DiscordAppleMusic" "$PRODUCTS/DiscordAppleMusicAgent" "$APP/Contents/MacOS/"
+HELPER="$APP/Contents/Library/LoginItems/DiscordAppleMusicAgent.app"
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$APP/Contents/Library/LaunchAgents" "$HELPER/Contents/MacOS"
+cp "$PRODUCTS/DiscordAppleMusic" "$APP/Contents/MacOS/"
+cp "$PRODUCTS/DiscordAppleMusicAgent" "$HELPER/Contents/MacOS/"
 sed "s/__VERSION__/$VERSION/g" Bundle/Info.plist > "$APP/Contents/Info.plist"
+sed "s/__VERSION__/$VERSION/g" Bundle/AgentInfo.plist > "$HELPER/Contents/Info.plist"
 cp Bundle/AppIcon.icns "$APP/Contents/Resources/"
 cp Bundle/dev.discord-apple-music.agent.plist "$APP/Contents/Library/LaunchAgents/"
-plutil -lint -s "$APP/Contents/Info.plist" "$APP/Contents/Library/LaunchAgents/"*.plist
+plutil -lint -s "$APP/Contents/Info.plist" "$HELPER/Contents/Info.plist" "$APP/Contents/Library/LaunchAgents/"*.plist
 
 echo "==> Signing as: $SIGNING_IDENTITY"
 # Inside-out: nested code first, then the bundle that seals it.
 codesign --force --options runtime --timestamp --sign "$SIGNING_IDENTITY" \
-    --identifier dev.discord-apple-music.agent --entitlements Bundle/Agent.entitlements \
-    "$APP/Contents/MacOS/DiscordAppleMusicAgent"
+    --entitlements Bundle/Agent.entitlements "$HELPER"
 # macOS attributes the agent's Apple Events to this app (its "responsible" process), so it needs
 # the entitlement too; without it the request is denied with no prompt (-1743).
 codesign --force --options runtime --timestamp --sign "$SIGNING_IDENTITY" \

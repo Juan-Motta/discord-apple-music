@@ -206,10 +206,6 @@ private struct DiscordCard: View {
                     .background(Discord.track, in: .rect(cornerRadius: 6))
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
-
-            Divider().overlay(Discord.track)
-
-            MemberLine(text: memberLine)
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -229,47 +225,12 @@ private struct DiscordCard: View {
             .underline(settings.clickableLinks, color: color.opacity(0.5))
     }
 
-    /// What the member list shows next to your name.
-    private var memberLine: String? {
-        guard let playing else { return nil }
-        switch settings.statusDisplay {
-        case .song: return "Listening to \(playing.title ?? "")"
-        case .artist: return "Listening to \(playing.artist ?? "")"
-        case .appName: return "Listening to Apple Music"
-        }
-    }
-
     private var placeholder: String {
         switch status?.state {
         case nil: "Off"
         case .discordUnavailable?: "Waiting for Discord"
         case .musicAccessDenied?: "No access to Music"
         default: "Nothing playing"
-        }
-    }
-}
-
-private struct MemberLine: View {
-    let text: String?
-
-    var body: some View {
-        HStack(spacing: 10) {
-            Circle()
-                .fill(LinearGradient(colors: [.pink, .indigo], startPoint: .topLeading, endPoint: .bottomTrailing))
-                .frame(width: 28, height: 28)
-                .overlay(alignment: .bottomTrailing) {
-                    Circle().fill(.green).frame(width: 9, height: 9)
-                        .overlay(Circle().stroke(Discord.background, lineWidth: 2))
-                }
-            VStack(alignment: .leading, spacing: 0) {
-                Text("You").font(.subheadline.weight(.semibold)).foregroundStyle(Discord.text)
-                if let text {
-                    Text(text).font(.caption).foregroundStyle(Discord.secondaryText).lineLimit(1)
-                        .contentTransition(.opacity)
-                }
-            }
-            Spacer()
-            Text("Member list").font(.caption2).foregroundStyle(Discord.secondaryText.opacity(0.7))
         }
     }
 }

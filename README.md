@@ -1,6 +1,8 @@
 # Discord Apple Music
 
 <p align="center">
+  <a href="https://github.com/Juan-Motta/discord-apple-music/releases/latest/download/DiscordAppleMusic.dmg"><img src="https://img.shields.io/badge/Download_for_macOS-.dmg-000000?style=for-the-badge&logo=apple&logoColor=white" alt="Download for macOS (.dmg)" height="50"></a>
+  &nbsp;
   <a href="https://buymeacoffee.com/jualopezmo"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy me a coffee" height="50"></a>
 </p>
 
@@ -26,7 +28,7 @@ A small native macOS app (about 5 MB). No Discord mods required: it talks to the
 
 ## Install
 
-**[Download the latest version](https://github.com/Juan-Motta/discord-apple-music/releases/latest)** (`DiscordAppleMusic-<version>.dmg`), open it and drag **Discord Apple Music** onto **Applications**.
+**[Download the latest version](https://github.com/Juan-Motta/discord-apple-music/releases/latest/download/DiscordAppleMusic.dmg)** (`.dmg`), open it and drag **Discord Apple Music** onto **Applications**.
 
 Or with Homebrew:
 

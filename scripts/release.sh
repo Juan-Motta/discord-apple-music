@@ -86,7 +86,10 @@ Requires macOS 14 or later (Apple Silicon or Intel) and the Discord desktop app.
 - \`$DMG_NAME\`: \`$(shasum -a 256 "$DMG" | cut -d' ' -f1)\`
 - \`$ZIP_NAME\`: \`$SHA256\`
 EOF
-    gh release create "$TAG" "$DMG" "$ZIP" --repo "$REPO" --title "$TAG" --notes-file "$NOTES" --verify-tag
+    # The unversioned copy gives a stable link to the newest installer:
+    # https://github.com/<repo>/releases/latest/download/DiscordAppleMusic.dmg
+    cp "$DMG" dist/DiscordAppleMusic.dmg
+    gh release create "$TAG" "$DMG" dist/DiscordAppleMusic.dmg "$ZIP" --repo "$REPO" --title "$TAG" --notes-file "$NOTES" --verify-tag
 
     echo "==> Updating Homebrew cask"
     URL="https://github.com/$REPO/releases/download/$TAG/$ZIP_NAME"

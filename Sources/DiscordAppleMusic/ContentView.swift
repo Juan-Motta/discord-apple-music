@@ -158,8 +158,12 @@ private struct PresenceTab: View {
 
             CustomizeSection(controller: controller)
             Link(destination: ContentView.donateURL) {
-                Label("Make a donation", systemImage: "heart.fill")
-                    .frame(maxWidth: .infinity)
+                Label {
+                    Text("Make a donation")
+                } icon: {
+                    Image(systemName: "heart.fill").foregroundStyle(.pink)
+                }
+                .frame(maxWidth: .infinity)
                     .padding(.vertical, 6)
             }
             .glassButton()
@@ -557,13 +561,12 @@ private extension View {
         }
     }
 
-    /// A prominent, pink-tinted button (the color of the donation heart).
     @ViewBuilder
     func glassButton() -> some View {
         if #available(macOS 26, *) {
-            buttonStyle(.glassProminent).tint(.pink).controlSize(.large)
+            buttonStyle(.glass).controlSize(.large)
         } else {
-            buttonStyle(.borderedProminent).tint(.pink).controlSize(.large)
+            buttonStyle(.bordered).controlSize(.large)
         }
     }
 }

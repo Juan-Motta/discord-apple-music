@@ -1,0 +1,6 @@
+{
+  "main": "dist/cli.cjs",
+  "output": "dist/discord-apple-music",
+  "disableExperimentalSEAWarning": true,
+  "useCodeCache": true
+}

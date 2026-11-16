@@ -5,15 +5,22 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "os": ["darwin"],
+  "os": [
+    "darwin"
+  ],
   "scripts": {
     "start": "node src/cli.ts run",
     "agent:install": "node src/cli.ts install",
     "agent:uninstall": "node src/cli.ts uninstall",
     "agent:status": "node src/cli.ts status",
-    "test": "node --test test/"
+    "test": "node --test test/",
+    "build": "scripts/release.sh --no-notarize",
+    "release": "scripts/release.sh"
   },
   "engines": {
     "node": ">=23.6"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12"
   }
 }

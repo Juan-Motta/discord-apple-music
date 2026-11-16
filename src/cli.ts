@@ -1,5 +1,5 @@
 import { isSea } from "node:sea";
-import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
 
 import { LaunchAgent } from "./adapters/launch-agent.ts";
 import { run } from "./app/run.ts";
@@ -15,7 +15,7 @@ Commands:
 
 /** How launchd should start this same program: the standalone binary, or node + this script. */
 function selfInvocation(): string[] {
-    return isSea() ? [process.execPath, "run"] : [process.execPath, fileURLToPath(import.meta.url), "run"];
+    return isSea() ? [process.execPath, "run"] : [process.execPath, resolve(process.argv[1]!), "run"];
 }
 
 async function main(command = "run"): Promise<void> {

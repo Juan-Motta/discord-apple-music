@@ -6,11 +6,29 @@ macOS only. No Discord mods required: it talks to the regular Discord desktop ap
 
 ## Requirements
 
-- macOS with the Music app
+- macOS on Apple Silicon, with the Music app
 - Discord desktop app, running
-- Node.js 23.6 or newer (runs the TypeScript sources directly, no build step)
 
-## Quick start
+## Install (no Node.js needed)
+
+1. Download `discord-apple-music-<version>-macos-arm64.zip` from [Releases](https://github.com/Juan-Motta/discord-apple-music/releases) and unzip it.
+2. Move the binary somewhere permanent, then install it as a login item:
+
+```bash
+mkdir -p ~/.local/bin && mv ~/Downloads/discord-apple-music ~/.local/bin/
+```
+
+```bash
+~/.local/bin/discord-apple-music install
+```
+
+The binary is signed and notarized by Apple. Other commands: `run` (foreground), `status`, `uninstall`.
+
+The login item points at the binary's location. If you move the binary later, run `install` again.
+
+## Run from source
+
+Requires Node.js 23.6 or newer, which runs the TypeScript sources directly.
 
 ```bash
 git clone https://github.com/Juan-Motta/discord-apple-music.git
@@ -20,7 +38,7 @@ npm start
 
 Play something in Apple Music and check your Discord profile. Press Ctrl+C to stop; the status clears.
 
-## Start automatically at login
+### Start automatically at login (from source)
 
 ```bash
 npm run agent:install     # install and start now
@@ -34,9 +52,9 @@ The agent points at this folder and at the Node.js binary that ran the install. 
 
 ## Permissions
 
-The first time it reads Apple Music, macOS asks whether `node` may control **Music**. Click **Allow**.
+The first time it reads Apple Music, macOS asks whether `discord-apple-music` (or `node`, when running from source) may control **Music**. Click **Allow**.
 
-If you clicked Don't Allow, nothing shows in Discord and the log says `Not allowed to control Music`. Enable it in **System Settings → Privacy & Security → Automation**, then run `npm run agent:install` again.
+If you clicked Don't Allow, nothing shows in Discord and the log says `Not allowed to control Music`. Enable it in **System Settings → Privacy & Security → Automation**, then run `install` again.
 
 ## How it behaves
 
@@ -68,6 +86,24 @@ src/cli.ts      run | install | uninstall | status
 ```
 
 `src/core` has no platform dependencies, so it can be reused by other front ends, such as a Vencord user plugin.
+
+### Building a release
+
+The release is a [Node.js single executable](https://nodejs.org/api/single-executable-applications.html): the sources bundled with esbuild and embedded into the Node.js binary, then signed with a Developer ID certificate and notarized.
+
+```bash
+npm install
+npm run build      # test, bundle, build and sign -> dist/*.zip (no notarization)
+npm run release    # same, plus Apple notarization
+```
+
+`npm run release` needs a notarytool keychain profile, created once:
+
+```bash
+xcrun notarytool store-credentials discord-apple-music --apple-id <apple id> --team-id <team id>
+```
+
+The binary matches the architecture of the Node.js that builds it (`arm64` on Apple Silicon).
 
 ## License
 

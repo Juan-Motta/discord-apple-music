@@ -105,11 +105,20 @@ The release is a [Node.js single executable](https://nodejs.org/api/single-execu
 
 ```bash
 npm install
-npm run build      # test, bundle, build and sign -> dist/*.zip (no notarization)
-npm run release    # same, plus Apple notarization
+npm run build            # test, bundle, build and sign -> dist/*.zip (no notarization)
+npm run release          # same, plus Apple notarization
+npm run release:publish  # same, then tag, create the GitHub Release and update the Homebrew tap
 ```
 
-`npm run release` needs a notarytool keychain profile, created once:
+To ship a new version, bump `version` in `package.json`, commit and push to `main`, then run `npm run release:publish`. It refuses to start unless the working tree is clean, `main` matches `origin/main`, and that version has no tag or release yet.
+
+The tap step edits `Formula/discord-apple-music.rb` in [Juan-Motta/homebrew-tap](https://github.com/Juan-Motta/homebrew-tap) through the GitHub API. To preview it without changing anything:
+
+```bash
+scripts/update-tap.sh <version> <asset url> <sha256> --dry-run
+```
+
+Notarization needs a notarytool keychain profile, created once:
 
 ```bash
 xcrun notarytool store-credentials discord-apple-music --apple-id <apple id> --team-id <team id>

@@ -15,7 +15,8 @@
     "agent:status": "node src/cli.ts status",
     "test": "node --test test/",
     "build": "scripts/release.sh --no-notarize",
-    "release": "scripts/release.sh"
+    "release": "scripts/release.sh",
+    "release:publish": "scripts/release.sh --publish"
   },
   "engines": {
     "node": ">=23.6"

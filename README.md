@@ -1,6 +1,8 @@
 # Discord Apple Music
 
-[![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/jualopezmo)
+<p align="center">
+  <a href="https://buymeacoffee.com/jualopezmo"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy me a coffee" height="50"></a>
+</p>
 
 Show what you're playing in **Apple Music** on your Discord profile as **"Listening to Apple Music"**, the same way Spotify does: song, artist, album cover, a live progress bar, and links that open the track in Apple Music.
 

@@ -35,6 +35,7 @@ SIGNING_IDENTITY="${SIGNING_IDENTITY:-$(security find-identity -v -p codesigning
 DIST="dist"
 APP="$DIST/$APP_NAME.app"
 ZIP="$DIST/DiscordAppleMusic-$VERSION-macos.zip"
+DMG="$DIST/DiscordAppleMusic-$VERSION.dmg"
 PRODUCTS=".build/out/Products/Release"
 
 echo "==> Testing"
@@ -79,13 +80,18 @@ codesign --force --options runtime --timestamp --sign "$SIGNING_IDENTITY" \
     --entitlements Bundle/Agent.entitlements "$APP"
 codesign --verify --deep --strict "$APP"
 
-if [[ "$NOTARIZE" == 1 ]]; then
-    echo "==> Notarizing (profile: $NOTARY_PROFILE)"
-    ditto -c -k --keepParent --norsrc "$APP" "$ZIP"
+notarize() {
+    echo "==> Notarizing $(basename "$1") (profile: $NOTARY_PROFILE)"
     # `--wait` exits 0 even when Apple rejects the upload, so check the final status explicitly.
-    STATUS="$(xcrun notarytool submit "$ZIP" --keychain-profile "$NOTARY_PROFILE" --wait --output-format json \
+    local status
+    status="$(xcrun notarytool submit "$1" --keychain-profile "$NOTARY_PROFILE" --wait --output-format json \
         | plutil -extract status raw -)"
-    [[ "$STATUS" == "Accepted" ]] || fail "Notarization status: $STATUS"
+    [[ "$status" == "Accepted" ]] || fail "Notarization status for $1: $status"
+}
+
+if [[ "$NOTARIZE" == 1 ]]; then
+    ditto -c -k --keepParent --norsrc "$APP" "$ZIP"
+    notarize "$ZIP"
     # Apps (unlike bare binaries) can carry the ticket, so they open offline on first launch.
     xcrun stapler staple -q "$APP"
     spctl --assess --type execute "$APP" || fail "Gatekeeper rejected the app"
@@ -95,5 +101,21 @@ echo "==> Packaging"
 rm -f "$ZIP"
 ditto -c -k --keepParent --norsrc "$APP" "$ZIP"
 
-echo "==> Done ($(du -sh "$APP" | cut -f1) app, $(du -h "$ZIP" | cut -f1) zip)"
+# The disk image is what most people download: open it, drag the app onto Applications.
+# The zip stays for the in-app updater and the Homebrew cask.
+echo "==> Building disk image"
+STAGING="$(mktemp -d)"
+trap 'rm -rf "$STAGING"' EXIT
+ditto "$APP" "$STAGING/$APP_NAME.app"
+ln -s /Applications "$STAGING/Applications"
+hdiutil create -quiet -volname "$APP_NAME" -srcfolder "$STAGING" -format ULFO -ov "$DMG"
+codesign --force --timestamp --sign "$SIGNING_IDENTITY" "$DMG"
+if [[ "$NOTARIZE" == 1 ]]; then
+    notarize "$DMG"
+    xcrun stapler staple -q "$DMG"
+    spctl --assess --type open --context context:primary-signature "$DMG" || fail "Gatekeeper rejected the disk image"
+fi
+
+echo "==> Done ($(du -sh "$APP" | cut -f1) app, $(du -h "$ZIP" | cut -f1) zip, $(du -h "$DMG" | cut -f1) dmg)"
 echo "$(shasum -a 256 "$ZIP" | cut -d' ' -f1)  $ZIP"
+echo "$(shasum -a 256 "$DMG" | cut -d' ' -f1)  $DMG"

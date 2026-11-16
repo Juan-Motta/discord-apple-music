@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Builds, notarizes and optionally publishes "Discord Apple Music.app".
 #
-#   scripts/release.sh               build + sign + notarize -> dist/*.zip
+#   scripts/release.sh               build + sign + notarize -> dist/*.dmg, dist/*.zip
 #   scripts/release.sh --no-notarize build + sign only (local testing)
 #   scripts/release.sh --publish     build + sign + notarize, then tag v<version>, create the
 #                                    GitHub Release and point the Homebrew cask at it
@@ -38,6 +38,8 @@ VERSION="$(tr -d '[:space:]' < VERSION)"
 TAG="v$VERSION"
 ZIP_NAME="DiscordAppleMusic-$VERSION-macos.zip"
 ZIP="dist/$ZIP_NAME"
+DMG_NAME="DiscordAppleMusic-$VERSION.dmg"
+DMG="dist/$DMG_NAME"
 
 # Check everything publishing needs before spending minutes on build and notarization.
 if [[ "$PUBLISH" == 1 ]]; then
@@ -55,7 +57,7 @@ fi
 BUILD_FLAGS=()
 [[ "$NOTARIZE" == 0 ]] && BUILD_FLAGS=(--no-notarize)
 VERSION="$VERSION" scripts/build-app.sh ${BUILD_FLAGS[@]+"${BUILD_FLAGS[@]}"}
-[[ -f "$ZIP" ]] || fail "The build did not produce $ZIP"
+[[ -f "$ZIP" && -f "$DMG" ]] || fail "The build did not produce $ZIP and $DMG"
 SHA256="$(shasum -a 256 "$ZIP" | cut -d' ' -f1)"
 
 if [[ "$PUBLISH" == 1 ]]; then
@@ -69,18 +71,22 @@ if [[ "$PUBLISH" == 1 ]]; then
     cat > "$NOTES" <<EOF
 ## Install
 
+Download **\`$DMG_NAME\`** below, open it and drag **Discord Apple Music** onto **Applications**. Then open it and turn on "Show in Discord".
+
+Or with Homebrew:
+
 \`\`\`bash
 brew trust --cask juan-motta/tap/discord-apple-music
 brew install --cask juan-motta/tap/discord-apple-music
 \`\`\`
 
-Or download \`$ZIP_NAME\` below and move **Discord Apple Music** to Applications. Open it and turn on "Show in Discord".
-
 Requires macOS 14 or later (Apple Silicon or Intel) and the Discord desktop app. Signed with a Developer ID certificate and notarized by Apple.
 
-**SHA-256:** \`$SHA256\`
+**SHA-256**
+- \`$DMG_NAME\`: \`$(shasum -a 256 "$DMG" | cut -d' ' -f1)\`
+- \`$ZIP_NAME\`: \`$SHA256\`
 EOF
-    gh release create "$TAG" "$ZIP" --repo "$REPO" --title "$TAG" --notes-file "$NOTES" --verify-tag
+    gh release create "$TAG" "$DMG" "$ZIP" --repo "$REPO" --title "$TAG" --notes-file "$NOTES" --verify-tag
 
     echo "==> Updating Homebrew cask"
     URL="https://github.com/$REPO/releases/download/$TAG/$ZIP_NAME"

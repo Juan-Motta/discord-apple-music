@@ -26,14 +26,16 @@ A small native macOS app (about 5 MB). No Discord mods required: it talks to the
 
 ## Install
 
+**[Download the latest version](https://github.com/Juan-Motta/discord-apple-music/releases/latest)** (`DiscordAppleMusic-<version>.dmg`), open it and drag **Discord Apple Music** onto **Applications**.
+
+Or with Homebrew:
+
 ```bash
 brew trust --cask juan-motta/tap/discord-apple-music
 brew install --cask juan-motta/tap/discord-apple-music
 ```
 
 Homebrew asks you to trust casks from taps outside Homebrew itself; the first line does that for this cask only.
-
-Or download `DiscordAppleMusic-<version>-macos.zip` from [Releases](https://github.com/Juan-Motta/discord-apple-music/releases), unzip it and move **Discord Apple Music** to Applications.
 
 The app is signed and notarized by Apple.
 
@@ -95,7 +97,7 @@ scripts/build-app.sh --no-notarize   # universal, signed app -> dist/
 ### Releasing
 
 ```bash
-scripts/release.sh               # test, build, sign and notarize -> dist/*.zip
+scripts/release.sh               # test, build, sign and notarize -> dist/*.dmg, dist/*.zip
 scripts/release.sh --publish     # same, then tag, create the GitHub Release and update the Homebrew cask
 ```
 

@@ -47,7 +47,9 @@ codesign --verify --strict "$BIN"
 "$BIN" --help >/dev/null # an invalid signature makes macOS kill the process here
 
 echo "==> Packaging"
-ditto -c -k --keepParent "$BIN" "$ZIP"
+# Zip only the binary at the archive root, without AppleDouble (._*) resource files.
+ditto -c -k --norsrc "$BIN" "$ZIP"
+[[ "$(unzip -Z1 "$ZIP")" == "$NAME" ]] || { echo "Unexpected archive contents" >&2; unzip -l "$ZIP" >&2; exit 1; }
 
 if [[ "$NOTARIZE" == 1 ]]; then
     echo "==> Notarizing (profile: $NOTARY_PROFILE)"

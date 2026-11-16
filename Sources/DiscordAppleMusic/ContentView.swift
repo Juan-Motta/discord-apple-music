@@ -3,12 +3,11 @@ import PresenceKit
 import SwiftUI
 
 enum Tab: String, CaseIterable, Identifiable {
-    case presence, customize, about
+    case presence, about
     var id: Self { self }
     var title: String {
         switch self {
         case .presence: "Presence"
-        case .customize: "Customize"
         case .about: "About"
         }
     }
@@ -29,7 +28,6 @@ struct ContentView: View {
             Group {
                 switch tab {
                 case .presence: PresenceTab(controller: controller)
-                case .customize: CustomizeTab(controller: controller)
                 case .about: AboutTab(updater: updater)
                 }
             }
@@ -92,27 +90,37 @@ private struct TabBar: View {
 // MARK: - Presence
 
 private struct PresenceTab: View {
-    let controller: AgentController
+    @Bindable var controller: AgentController
 
     var body: some View {
         VStack(spacing: 12) {
-            DiscordCard(status: controller.isOn ? controller.agentStatus : nil)
+            DiscordCard(status: controller.isOn ? controller.agentStatus : nil, settings: controller.settings)
 
             VStack(spacing: 0) {
-                Toggle(isOn: Binding(get: { controller.isOn }, set: { controller.setOn($0) })) {
+                HStack {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Show in Discord").font(.headline)
                         Text("Runs in the background and starts at login.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
+                    Spacer()
+                    Toggle("Show in Discord", isOn: Binding(get: { controller.isOn }, set: { controller.setOn($0) }))
+                        .toggleStyle(.switch)
+                        .labelsHidden()
                 }
-                .toggleStyle(.switch)
                 .padding(14)
 
                 StatusAction(controller: controller)
             }
             .glassPanel()
+
+            CustomizeSection(controller: controller)
+            Link(destination: ContentView.donateURL) {
+                Label("Buy me a coffee", systemImage: "cup.and.saucer.fill")
+                    .frame(maxWidth: .infinity)
+            }
+            .glassButton()
         }
     }
 }
@@ -148,29 +156,33 @@ private struct StatusAction: View {
     }
 }
 
-/// A look-alike of Discord's "Listening to" card, fed by what the agent publishes.
+/// A look-alike of Discord's "Listening to" card and member-list line. The song comes from what
+/// the agent publishes; the settings are applied right away so changes show while you toggle them.
 private struct DiscordCard: View {
     let status: AgentStatus?
+    let settings: PresenceCore.Settings
 
-    private var isPlaying: Bool { status?.state == .playing }
+    private var playing: AgentStatus? { status?.state == .playing ? status : nil }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(isPlaying ? "Listening to Apple Music" : "Discord preview")
+        VStack(alignment: .leading, spacing: 12) {
+            Text(playing != nil ? "Listening to Apple Music" : "Discord preview")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(Discord.secondaryText)
 
             HStack(spacing: 12) {
-                Artwork(url: isPlaying ? status?.artworkURL : nil)
-
+                if settings.showCoverArt {
+                    Artwork(url: playing?.artworkURL)
+                        .transition(.scale(scale: 0.6).combined(with: .opacity))
+                }
                 VStack(alignment: .leading, spacing: 2) {
-                    if isPlaying, let status {
-                        Text(status.title ?? "").font(.headline).foregroundStyle(Discord.text)
-                        Text(status.artist ?? "").font(.subheadline).foregroundStyle(Discord.secondaryText)
-                        if let album = status.album {
-                            Text(album).font(.subheadline).foregroundStyle(Discord.secondaryText)
+                    if let playing {
+                        link(playing.title ?? "", font: .headline, color: Discord.text)
+                        link(playing.artist ?? "", font: .subheadline, color: Discord.secondaryText)
+                        if let album = playing.album {
+                            link(album, font: .subheadline, color: Discord.secondaryText)
                         }
-                        if let start = status.startedAt, let end = status.endsAt {
+                        if let start = playing.startedAt, let end = playing.endsAt {
                             ProgressLine(start: start, end: end).padding(.top, 6)
                         }
                     } else {
@@ -183,14 +195,48 @@ private struct DiscordCard: View {
                 .lineLimit(1)
                 .contentTransition(.opacity)
             }
+            .frame(minHeight: 72)
+
+            if settings.showButton, playing != nil {
+                Text("Listen on Apple Music")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(Discord.text)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 7)
+                    .background(Discord.track, in: .rect(cornerRadius: 6))
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+
+            Divider().overlay(Discord.track)
+
+            MemberLine(text: memberLine)
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Discord.background, in: .rect(cornerRadius: 14))
         .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(.white.opacity(0.06)))
         .shadow(color: .black.opacity(0.18), radius: 12, y: 6)
-        .animation(.smooth, value: status)
+        .animation(.smooth(duration: 0.3), value: status)
+        .animation(.smooth(duration: 0.3), value: settings)
         .environment(\.colorScheme, .dark)
+    }
+
+    /// Song, artist and album are links in Discord when "Clickable" is on.
+    private func link(_ text: String, font: Font, color: Color) -> some View {
+        Text(text)
+            .font(font)
+            .foregroundStyle(color)
+            .underline(settings.clickableLinks, color: color.opacity(0.5))
+    }
+
+    /// What the member list shows next to your name.
+    private var memberLine: String? {
+        guard let playing else { return nil }
+        switch settings.statusDisplay {
+        case .song: return "Listening to \(playing.title ?? "")"
+        case .artist: return "Listening to \(playing.artist ?? "")"
+        case .appName: return "Listening to Apple Music"
+        }
     }
 
     private var placeholder: String {
@@ -199,6 +245,31 @@ private struct DiscordCard: View {
         case .discordUnavailable?: "Waiting for Discord"
         case .musicAccessDenied?: "No access to Music"
         default: "Nothing playing"
+        }
+    }
+}
+
+private struct MemberLine: View {
+    let text: String?
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Circle()
+                .fill(LinearGradient(colors: [.pink, .indigo], startPoint: .topLeading, endPoint: .bottomTrailing))
+                .frame(width: 28, height: 28)
+                .overlay(alignment: .bottomTrailing) {
+                    Circle().fill(.green).frame(width: 9, height: 9)
+                        .overlay(Circle().stroke(Discord.background, lineWidth: 2))
+                }
+            VStack(alignment: .leading, spacing: 0) {
+                Text("You").font(.subheadline.weight(.semibold)).foregroundStyle(Discord.text)
+                if let text {
+                    Text(text).font(.caption).foregroundStyle(Discord.secondaryText).lineLimit(1)
+                        .contentTransition(.opacity)
+                }
+            }
+            Spacer()
+            Text("Member list").font(.caption2).foregroundStyle(Discord.secondaryText.opacity(0.7))
         }
     }
 }
@@ -263,7 +334,7 @@ private struct ProgressLine: View {
 
 // MARK: - Customize
 
-private struct CustomizeTab: View {
+private struct CustomizeSection: View {
     @Bindable var controller: AgentController
 
     var body: some View {
@@ -291,26 +362,6 @@ private struct CustomizeTab: View {
             }
             .glassPanel()
 
-            VStack(alignment: .leading, spacing: 6) {
-                HStack {
-                    Text("Discord application ID")
-                    Spacer()
-                    TextField("Default", text: Binding(
-                        get: { controller.settings.clientID ?? "" },
-                        set: { controller.settings.clientID = $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 }
-                    ))
-                    .textFieldStyle(.plain)
-                    .multilineTextAlignment(.trailing)
-                    .frame(width: 170)
-                }
-                .padding(14)
-                .glassPanel()
-
-                Text("Use your own Discord application to change the name or icon shown in Discord.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 14)
-            }
         }
     }
 }
@@ -325,11 +376,16 @@ private struct OptionRow: View {
     }
 
     var body: some View {
-        Toggle(title, isOn: $isOn)
-            .toggleStyle(.switch)
-            .controlSize(.small)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
+        HStack {
+            Text(title)
+            Spacer()
+            Toggle(title, isOn: $isOn)
+                .toggleStyle(.switch)
+                .controlSize(.small)
+                .labelsHidden()
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
     }
 }
 
@@ -363,11 +419,6 @@ private struct AboutTab: View {
             }
             .glassPanel()
 
-            Link(destination: ContentView.donateURL) {
-                Label("Buy me a coffee", systemImage: "cup.and.saucer.fill")
-                    .frame(maxWidth: .infinity)
-            }
-            .glassButton()
         }
     }
 }

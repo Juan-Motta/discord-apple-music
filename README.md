@@ -31,9 +31,8 @@ Open the app again to turn it off or change what's shown:
 - clickable song, artist and album
 - the "Listen on Apple Music" button
 - what the member list shows next to your name: song, artist or "Apple Music"
-- your own Discord application ID
 
-The bottom of the window shows the app's version. When a newer release is out, an **Update** button downloads it, checks that it's signed by the same developer, and restarts the app on the new version.
+The **About** tab shows the app's version. When a newer release is out, an **Update** button downloads it, checks that it's signed by the same developer, and restarts the app on the new version.
 
 ## Permissions
 
@@ -48,10 +47,6 @@ If you clicked Don't Allow, nothing shows in Discord and the app says "Allow acc
 - **Updates:** reacts to Music's own play, pause and track-change notifications, and checks every 15 seconds for seeks. It only talks to Discord when something changed.
 - **Cover art and links:** looked up through the public iTunes Search API. Songs that aren't in the Apple Music catalog (your own uploads) show without a cover.
 - **The "Listen on Apple Music" button:** other people see it on your profile, but Discord never shows your own buttons to you. The song title, artist, and cover are also clickable links, and those you can see.
-
-## Use your own Discord application
-
-By default it uses a shared Discord application named "Apple Music". To use your own name or icon, create an application at <https://discord.com/developers/applications> and paste its Application ID into the app, under **Advanced**.
 
 ## Uninstall
 
@@ -104,7 +99,7 @@ xcrun notarytool store-credentials discord-apple-music --apple-id <apple id> --t
 
 ## Support
 
-If you enjoy it, you can [buy me a coffee](https://buymeacoffee.com/jualopezmo). There's also a button at the bottom of the app.
+If you enjoy it, you can [buy me a coffee](https://buymeacoffee.com/jualopezmo). There's also a button in the app.
 
 ## License
 

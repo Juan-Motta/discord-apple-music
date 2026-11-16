@@ -33,6 +33,8 @@ Open the app again to turn it off or change what's shown:
 - what the member list shows next to your name: song, artist or "Apple Music"
 - your own Discord application ID
 
+The bottom of the window shows the app's version. When a newer release is out, an **Update** button downloads it, checks that it's signed by the same developer, and restarts the app on the new version.
+
 ## Permissions
 
 The first time it reads Apple Music, macOS asks whether **Discord Apple Music** may control **Music**. Click **Allow**.

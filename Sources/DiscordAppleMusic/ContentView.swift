@@ -4,6 +4,7 @@ import SwiftUI
 
 struct ContentView: View {
     @Bindable var controller: AgentController
+    let updater: UpdateController
 
     static let donateURL = URL(string: "https://buymeacoffee.com/jualopezmo")!
 
@@ -48,6 +49,7 @@ struct ContentView: View {
             }
 
             Section {
+                UpdateRow(updater: updater)
                 HStack {
                     Text("Enjoying it?")
                     Spacer()
@@ -61,6 +63,7 @@ struct ContentView: View {
         .frame(width: 420)
         .fixedSize(horizontal: false, vertical: true)
         .onAppear { controller.refresh() }
+        .task { await updater.check() }
     }
 }
 
@@ -103,6 +106,38 @@ private struct StatusRow: View {
             }
             Spacer()
             action()
+        }
+    }
+}
+
+private struct UpdateRow: View {
+    let updater: UpdateController
+
+    var body: some View {
+        HStack {
+            Text("Version \(updater.versionText)")
+            Spacer()
+            switch updater.state {
+            case .idle:
+                Button("Check for Updates") { Task { await updater.check() } }
+            case .checking:
+                ProgressView().controlSize(.small)
+            case .upToDate:
+                Text("Up to date").foregroundStyle(.secondary)
+            case .available(let update):
+                Button("Update to \(update.version)") { Task { await updater.install(update) } }
+                    .buttonStyle(.borderedProminent)
+            case .installing:
+                ProgressView().controlSize(.small)
+                Text("Updating…").foregroundStyle(.secondary)
+            case .failed(_, let update?):
+                Button("Download") { updater.openReleasePage(update) }
+            case .failed:
+                Button("Try Again") { Task { await updater.check() } }
+            }
+        }
+        if case .failed(let message, _) = updater.state {
+            Text(message).font(.caption).foregroundStyle(.red)
         }
     }
 }

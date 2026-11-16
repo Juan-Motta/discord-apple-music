@@ -52,6 +52,8 @@ public struct Settings: Codable, Equatable, Sendable {
     public var showButton = true
     public var clickableLinks = true
     public var statusDisplay = StatusDisplay.song
+    /// Start the presence when you log in. When off, it starts only when you open the app.
+    public var startAtLogin = true
     /// Custom Discord application ID; `nil` uses the shared "Apple Music" application.
     public var clientID: String?
 
@@ -63,6 +65,7 @@ public struct Settings: Codable, Equatable, Sendable {
         showButton = try c.decodeIfPresent(Bool.self, forKey: .showButton) ?? true
         clickableLinks = try c.decodeIfPresent(Bool.self, forKey: .clickableLinks) ?? true
         statusDisplay = try c.decodeIfPresent(StatusDisplay.self, forKey: .statusDisplay) ?? .song
+        startAtLogin = try c.decodeIfPresent(Bool.self, forKey: .startAtLogin) ?? true
         clientID = try c.decodeIfPresent(String.self, forKey: .clientID)
     }
 }
@@ -70,4 +73,17 @@ public struct Settings: Codable, Equatable, Sendable {
 public enum DiscordApplication {
     /// Public Discord application named "Apple Music". Not a secret.
     public static let defaultClientID = "1571938418022420505"
+}
+
+/// Whether a launch of the agent should do nothing because the user turned off "Start at login".
+///
+/// launchd starts a registered agent at every login, so the agent itself tells a login launch
+/// (shortly after the session began, with no recent request from the app) from one the app asked for.
+public func shouldSkipLaunch(
+    settings: Settings, now: Date, sessionStart: Date?, lastStartRequest: Date?,
+    loginWindow: TimeInterval = 120, requestWindow: TimeInterval = 30
+) -> Bool {
+    guard !settings.startAtLogin, let sessionStart else { return false }
+    if let lastStartRequest, now.timeIntervalSince(lastStartRequest) < requestWindow { return false }
+    return now.timeIntervalSince(sessionStart) < loginWindow
 }

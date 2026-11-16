@@ -104,6 +104,17 @@ final class Agent {
     }
 }
 
+let store = AppStore.default
+if shouldSkipLaunch(
+    settings: store.loadSettings(), now: Date(),
+    sessionStart: consoleSessionStart(), lastStartRequest: store.lastStartRequest())
+{
+    // "Start at login" is off: stay quiet until the user opens the app, which starts us again.
+    try? store.saveStatus(AgentStatus(state: .idle))
+    NSLog("[agent] start at login is off; exiting")
+    exit(0)
+}
+
 let agent = Agent()
 agent.start()
 

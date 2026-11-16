@@ -96,7 +96,8 @@ import Testing
 @Suite struct StatusForTheApp {
     @Test func playingStatusCarriesWhatDiscordShows() throws {
         let track = Track(id: "A", title: "Song", artist: "Artist", album: "Album", duration: 200)
-        let artwork = Artwork(imageURL: "https://img/x.jpg", trackURL: nil, artistURL: nil, albumURL: nil)
+        let artwork = Artwork(
+            imageURL: "https://img/x.jpg", trackURL: "https://music/t", artistURL: "https://music/ar", albumURL: "https://music/al")
         let activity = try #require(makeActivity(
             .playing(track, position: 30), artwork: artwork, now: Date(timeIntervalSince1970: 1_000), settings: Settings()))
         let status = AgentStatus.playing(activity)
@@ -107,6 +108,10 @@ import Testing
         #expect(status.artworkURL == "https://img/x.jpg")
         #expect(status.startedAt == Date(timeIntervalSince1970: 970))
         #expect(status.endsAt == Date(timeIntervalSince1970: 1_170))
+        #expect(status.trackURL == "https://music/t")
+        #expect(status.artistURL == "https://music/ar")
+        #expect(status.albumURL == "https://music/al")
+        #expect(status.buttonURL == "https://music/t")
     }
 
     @Test func readsStatusFilesWrittenBeforeTheseFields() throws {

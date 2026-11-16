@@ -100,7 +100,7 @@ private struct PresenceTab: View {
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Show in Discord").font(.headline)
-                        Text("Runs in the background and starts at login.")
+                        Text("Runs in the background, even with this window closed.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -110,6 +110,9 @@ private struct PresenceTab: View {
                         .labelsHidden()
                 }
                 .padding(14)
+
+                Divider().padding(.horizontal, 14)
+                OptionRow("Start at login", isOn: $controller.settings.startAtLogin)
 
                 StatusAction(controller: controller)
             }
@@ -173,14 +176,15 @@ private struct DiscordCard: View {
             HStack(spacing: 12) {
                 if settings.showCoverArt {
                     Artwork(url: playing?.artworkURL)
+                        .opensLink(settings.clickableLinks ? playing?.albumURL : nil)
                         .transition(.scale(scale: 0.6).combined(with: .opacity))
                 }
                 VStack(alignment: .leading, spacing: 2) {
                     if let playing {
-                        link(playing.title ?? "", font: .headline, color: Discord.text)
-                        link(playing.artist ?? "", font: .subheadline, color: Discord.secondaryText)
+                        link(playing.title ?? "", playing.trackURL, font: .headline, color: Discord.text)
+                        link(playing.artist ?? "", playing.artistURL, font: .subheadline, color: Discord.secondaryText)
                         if let album = playing.album {
-                            link(album, font: .subheadline, color: Discord.secondaryText)
+                            link(album, playing.albumURL, font: .subheadline, color: Discord.secondaryText)
                         }
                         if let start = playing.startedAt, let end = playing.endsAt {
                             ProgressLine(start: start, end: end).padding(.top, 6)
@@ -204,6 +208,8 @@ private struct DiscordCard: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 7)
                     .background(Discord.track, in: .rect(cornerRadius: 6))
+                    .contentShape(.rect)
+                    .opensLink(playing?.buttonURL)
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
@@ -218,11 +224,9 @@ private struct DiscordCard: View {
     }
 
     /// Song, artist and album are links in Discord when "Clickable" is on.
-    private func link(_ text: String, font: Font, color: Color) -> some View {
-        Text(text)
-            .font(font)
-            .foregroundStyle(color)
-            .underline(settings.clickableLinks, color: color.opacity(0.5))
+    /// Song, artist and album open Apple Music, like in Discord, when "Clickable" is on.
+    private func link(_ text: String, _ url: String?, font: Font, color: Color) -> some View {
+        HoverLink(text: text, url: settings.clickableLinks ? url : nil, font: font, color: color)
     }
 
     private var placeholder: String {
@@ -231,6 +235,47 @@ private struct DiscordCard: View {
         case .discordUnavailable?: "Waiting for Discord"
         case .musicAccessDenied?: "No access to Music"
         default: "Nothing playing"
+        }
+    }
+}
+
+/// Text that underlines on hover and opens its link on click, like Discord's activity links.
+private struct HoverLink: View {
+    let text: String
+    let url: String?
+    let font: Font
+    let color: Color
+    // ObservableObject + @StateObject instead of @State: SwiftUI's macro plugin ships only with Xcode.
+    @StateObject private var hover = HoverState()
+
+    var body: some View {
+        Text(text)
+            .font(font)
+            .foregroundStyle(color)
+            .underline(hover.isHovering && url != nil, color: color)
+            .onHover { hover.isHovering = $0 }
+            .opensLink(url)
+    }
+}
+
+private final class HoverState: ObservableObject {
+    @Published var isHovering = false
+}
+
+private extension View {
+    /// Opens `url` on click with a pointing-hand cursor; does nothing when `url` is nil.
+    @ViewBuilder
+    func opensLink(_ url: String?) -> some View {
+        if let url, let destination = URL(string: url) {
+            let clickable = onTapGesture { NSWorkspace.shared.open(destination) }
+                .help(destination.absoluteString)
+            if #available(macOS 15, *) {
+                clickable.pointerStyle(.link)
+            } else {
+                clickable
+            }
+        } else {
+            self
         }
     }
 }

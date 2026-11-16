@@ -10,6 +10,8 @@ import ServiceManagement
 final class AgentController {
     /// Must match the plist shipped in Contents/Library/LaunchAgents.
     static let agentPlist = "dev.discord-apple-music.agent.plist"
+    /// The `Label` inside that plist.
+    static let agentLabel = "dev.discord-apple-music.agent"
 
     private let store = AppStore.default
     private let service = SMAppService.agent(plistName: agentPlist)
@@ -34,7 +36,10 @@ final class AgentController {
     init() {
         settings = store.loadSettings()
         refresh()
-        Task { await reregisterAfterUpdate() }
+        Task {
+            await reregisterAfterUpdate()
+            startIfStopped()
+        }
         DistributedNotificationCenter.default().addObserver(
             forName: AppStore.statusChanged, object: nil, queue: .main
         ) { [weak self] _ in
@@ -54,6 +59,7 @@ final class AgentController {
         lastError = nil
         do {
             if on {
+                store.requestStart()
                 try service.register()
                 UserDefaults.standard.set(
                     Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion"), forKey: "registeredAgentVersion")
@@ -74,12 +80,24 @@ final class AgentController {
         guard isOn, UserDefaults.standard.string(forKey: key) != version else { return }
         do {
             try await service.unregister()
+            store.requestStart()
             try service.register()
             UserDefaults.standard.set(version, forKey: key)
         } catch {
             lastError = error.localizedDescription
         }
         refresh()
+    }
+
+    /// With "Start at login" off the agent skips the login launch, so opening the app starts it.
+    /// Does nothing if it is already running.
+    private func startIfStopped() {
+        guard isOn else { return }
+        store.requestStart()
+        let launchctl = Process()
+        launchctl.executableURL = URL(fileURLWithPath: "/bin/launchctl")
+        launchctl.arguments = ["kickstart", "gui/\(getuid())/\(Self.agentLabel)"]
+        try? launchctl.run()
     }
 
     func openLoginItemsSettings() {

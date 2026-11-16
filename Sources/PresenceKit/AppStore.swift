@@ -18,11 +18,18 @@ public struct AgentStatus: Codable, Equatable, Sendable {
     public var artworkURL: String?
     public var startedAt: Date?
     public var endsAt: Date?
+    /// Links Discord opens; nil when "Clickable" or the button is off.
+    public var trackURL: String?
+    public var artistURL: String?
+    public var albumURL: String?
+    public var buttonURL: String?
     public var updatedAt: Date
 
     public init(
         state: State, title: String? = nil, artist: String? = nil, album: String? = nil,
-        artworkURL: String? = nil, startedAt: Date? = nil, endsAt: Date? = nil, updatedAt: Date = Date()
+        artworkURL: String? = nil, startedAt: Date? = nil, endsAt: Date? = nil,
+        trackURL: String? = nil, artistURL: String? = nil, albumURL: String? = nil, buttonURL: String? = nil,
+        updatedAt: Date = Date()
     ) {
         self.state = state
         self.title = title
@@ -31,6 +38,10 @@ public struct AgentStatus: Codable, Equatable, Sendable {
         self.artworkURL = artworkURL
         self.startedAt = startedAt
         self.endsAt = endsAt
+        self.trackURL = trackURL
+        self.artistURL = artistURL
+        self.albumURL = albumURL
+        self.buttonURL = buttonURL
         self.updatedAt = updatedAt
     }
 
@@ -44,7 +55,11 @@ public struct AgentStatus: Codable, Equatable, Sendable {
             album: activity.assets?.largeText,
             artworkURL: activity.assets?.largeImage,
             startedAt: activity.timestamps.map { date($0.start) },
-            endsAt: activity.timestamps.map { date($0.end) })
+            endsAt: activity.timestamps.map { date($0.end) },
+            trackURL: activity.detailsURL,
+            artistURL: activity.stateURL,
+            albumURL: activity.assets?.largeURL,
+            buttonURL: activity.buttons?.first?.url)
     }
 }
 
@@ -87,6 +102,19 @@ public struct AppStore: Sendable {
 
     public func saveStatus(_ status: AgentStatus) throws {
         try write(status, to: statusURL)
+    }
+
+    var startRequestURL: URL { directory.appendingPathComponent("start-request") }
+
+    /// Marks that the app is about to start the agent, so the agent runs even right after login.
+    public func requestStart(at date: Date = Date()) {
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try? Data().write(to: startRequestURL)
+        try? FileManager.default.setAttributes([.modificationDate: date], ofItemAtPath: startRequestURL.path)
+    }
+
+    public func lastStartRequest() -> Date? {
+        (try? FileManager.default.attributesOfItem(atPath: startRequestURL.path))?[.modificationDate] as? Date
     }
 
     private func write(_ value: some Encodable, to url: URL) throws {

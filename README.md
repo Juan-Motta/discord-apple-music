@@ -23,7 +23,7 @@ The app is signed and notarized by Apple.
 
 ## Use
 
-Open **Discord Apple Music** and turn on **Show in Discord**. It keeps working in the background after you close the window and starts at every login, with no menu bar or Dock icon.
+Open **Discord Apple Music** and turn on **Show in Discord**. It keeps working in the background after you close the window, with no menu bar or Dock icon, and starts at every login unless you turn off **Start at login** (then it starts when you open the app).
 
 Open the app again to turn it off or change what's shown:
 

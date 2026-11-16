@@ -108,3 +108,34 @@ private let artwork = Artwork(
         #expect(needsUpdate(base, makeActivity(playing, artwork: nil, now: now, settings: settings)))
     }
 }
+
+@Suite struct StartAtLogin {
+    let now = Date(timeIntervalSince1970: 10_000)
+    var off: Settings { var s = Settings(); s.startAtLogin = false; return s }
+
+    @Test func runsAtLoginWhenEnabled() {
+        #expect(!shouldSkipLaunch(settings: Settings(), now: now, sessionStart: now.addingTimeInterval(-5), lastStartRequest: nil))
+    }
+
+    @Test func skipsLoginLaunchWhenDisabled() {
+        #expect(shouldSkipLaunch(settings: off, now: now, sessionStart: now.addingTimeInterval(-5), lastStartRequest: nil))
+    }
+
+    @Test func runsWhenTheAppAskedEvenRightAfterLogin() {
+        #expect(!shouldSkipLaunch(settings: off, now: now, sessionStart: now.addingTimeInterval(-5), lastStartRequest: now.addingTimeInterval(-2)))
+    }
+
+    @Test func runsWhenLaunchedLongAfterLogin() {
+        // e.g. launchd restarting it after a crash, or the user turning it on later
+        #expect(!shouldSkipLaunch(settings: off, now: now, sessionStart: now.addingTimeInterval(-3_600), lastStartRequest: nil))
+    }
+
+    @Test func runsWhenTheSessionStartIsUnknown() {
+        #expect(!shouldSkipLaunch(settings: off, now: now, sessionStart: nil, lastStartRequest: nil))
+    }
+
+    @Test func olderSettingsFilesDefaultToStartingAtLogin() throws {
+        let settings = try JSONDecoder().decode(Settings.self, from: Data(#"{"showButton":false}"#.utf8))
+        #expect(settings.startAtLogin)
+    }
+}

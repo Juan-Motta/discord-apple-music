@@ -110,7 +110,7 @@ agent.start()
 signal(SIGTERM, SIG_IGN)
 let terminate = DispatchSource.makeSignalSource(signal: SIGTERM, queue: .main)
 terminate.setEventHandler {
-    MainActor.assumeIsolated {
+    _ = MainActor.assumeIsolated {
         Task {
             await agent.stop()
             exit(0)

@@ -21,13 +21,9 @@ final class TabSelection {
     private static let key = "selectedTab"
 
     private(set) var tab = Tab(rawValue: UserDefaults.standard.string(forKey: key) ?? "") ?? .presence
-    /// The side the new tab's content slides in from.
-    private(set) var edge = Edge.trailing
 
     func select(_ next: Tab) {
         guard next != tab else { return }
-        let order = Tab.allCases
-        edge = order.firstIndex(of: next)! > order.firstIndex(of: tab)! ? .trailing : .leading
         withAnimation(.spring(duration: 0.4, bounce: 0.15)) { tab = next }
         UserDefaults.standard.set(next.rawValue, forKey: Self.key)
     }
@@ -61,23 +57,18 @@ struct ContentView: View {
     var body: some View {
         VStack(spacing: 16) {
             TabBar(tabs: tabs)
-            ZStack {
-                switch tabs.tab {
-                case .presence: PresenceTab(controller: controller)
-                case .about: AboutTab(updater: updater)
-                }
+            // Both pages stay laid out, so the window always has the taller one's height and
+            // never resizes; switching only slides them sideways.
+            ZStack(alignment: .top) {
+                PresenceTab(controller: controller).page(.presence, selected: tabs.tab)
+                AboutTab(updater: updater).page(.about, selected: tabs.tab)
             }
-            .transition(.push(from: tabs.edge))
-            .id(tabs.tab)
         }
         .padding(.horizontal, 20)
         .padding(.bottom, 20)
         .padding(.top, 8)
         .frame(width: 400)
         .fixedSize(horizontal: false, vertical: true)
-        // While the window resizes to the new tab it is briefly taller than the content;
-        // keep the content at the top instead of centering it.
-        .frame(maxHeight: .infinity, alignment: .top)
         .onAppear { controller.refresh() }
         .task { await updater.check() }
     }
@@ -169,6 +160,7 @@ private struct PresenceTab: View {
             Link(destination: ContentView.donateURL) {
                 Label("Make a donation", systemImage: "heart.fill")
                     .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
             }
             .glassButton()
         }
@@ -535,6 +527,16 @@ private struct UpdateRow: View {
 // MARK: - Glass
 
 private extension View {
+    /// Shows this page when it is the selected tab, and slides it off to its side otherwise.
+    func page(_ tab: Tab, selected: Tab) -> some View {
+        let order = Tab.allCases
+        let distance = CGFloat(order.firstIndex(of: tab)! - order.firstIndex(of: selected)!)
+        return offset(x: distance * 420)
+            .opacity(distance == 0 ? 1 : 0)
+            .allowsHitTesting(distance == 0)
+            .accessibilityHidden(distance != 0)
+    }
+
     /// A rounded Liquid Glass panel, or a material panel before macOS 26.
     @ViewBuilder
     func glassPanel() -> some View {

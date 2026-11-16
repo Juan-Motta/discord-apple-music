@@ -119,9 +119,15 @@ private struct TabBar: View {
 }
 
 private struct SelectionCapsule: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         if #available(macOS 26, *) {
-            Capsule().fill(.clear).glassEffect(.regular.interactive(), in: .capsule)
+            // A light tint, like macOS's own segmented control, so the pill stands out from the bar.
+            let tint = Color.white.opacity(colorScheme == .dark ? 0.18 : 0.75)
+            Capsule().fill(.clear)
+                .glassEffect(.regular.tint(tint).interactive(), in: .capsule)
+                .shadow(color: .black.opacity(colorScheme == .dark ? 0.3 : 0.08), radius: 3, y: 1)
         } else {
             Capsule().fill(.background).shadow(color: .black.opacity(0.12), radius: 2, y: 1)
         }

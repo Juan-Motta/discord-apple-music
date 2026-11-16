@@ -9,7 +9,19 @@ macOS only. No Discord mods required: it talks to the regular Discord desktop ap
 - macOS on Apple Silicon, with the Music app
 - Discord desktop app, running
 
-## Install (no Node.js needed)
+## Install with Homebrew
+
+```bash
+brew install juan-motta/tap/discord-apple-music
+```
+
+```bash
+brew services start discord-apple-music
+```
+
+`brew services` starts it now and at every login. Use it instead of `discord-apple-music install`, not both, or two copies will run. Logs go to `$(brew --prefix)/var/log/discord-apple-music.log`.
+
+## Install manually (no Node.js needed)
 
 1. Download `discord-apple-music-<version>-macos-arm64.zip` from [Releases](https://github.com/Juan-Motta/discord-apple-music/releases) and unzip it.
 2. Move the binary somewhere permanent, then install it as a login item:

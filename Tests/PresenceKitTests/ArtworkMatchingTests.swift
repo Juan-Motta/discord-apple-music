@@ -84,3 +84,53 @@ private func resolver(_ fake: FakeSearch) -> ITunesArtworkResolver {
 }
 
 private struct URLErrorStub: Error {}
+
+@Suite struct HardToSearchSongs {
+    // Real case: "1-800" by "bbno$ & Ironmouse" is in the catalog, but iTunes search returns
+    // nothing for terms with "$", and never lists the song for "1-800 bbno" either.
+    let track = Track(id: "B1", title: "1-800", artist: "bbno$ & Ironmouse", album: "1-800 - Single", duration: 209)
+
+    func catalogSong(art: String) -> ITunesResult {
+        ITunesResult(
+            trackName: "1-800", artistName: "bbno$ & Ironmouse", collectionName: "1-800 - Single",
+            artworkUrl100: "https://img/\(art)/100x100bb.jpg", trackViewUrl: "https://music/1800?i=2",
+            artistViewUrl: nil, collectionViewUrl: "https://music/1800-single?i=2")
+    }
+
+    @Test func dropsDollarSignsFromSearchTerms() async {
+        let fake = FakeSearch([:])
+        _ = await resolver(fake).resolve(track)
+        let terms = await fake.calls.map(\.term)
+        #expect(!terms.isEmpty)
+        #expect(terms.allSatisfy { !$0.contains("$") })
+    }
+
+    @Test func findsTheSongInTheLeadArtistsCatalogWhenSearchMissesIt() async {
+        let parody = ITunesResult(
+            trackName: "67 (Parody of \"1-800\" by bbno$)", artistName: "Mobby Rosas", collectionName: "67 - Single",
+            artworkUrl100: "https://img/parody/100x100bb.jpg", trackViewUrl: nil, artistViewUrl: nil, collectionViewUrl: nil)
+        let artists = [
+            ITunesResult(artistName: "Somebody Else", artistId: 1),
+            ITunesResult(artistName: "bbno$", artistId: 1161580951),
+        ]
+        let fake = FakeSearch([.song: [parody], .musicArtist: artists])
+        let resolver = ITunesArtworkResolver(
+            search: { term, entity in await fake.search(term, entity) },
+            artistSongs: { id in id == 1161580951 ? [parody, self.catalogSong(art: "1800")] : [] })
+        let artwork = await resolver.resolve(track)
+        #expect(artwork?.imageURL == "https://img/1800/512x512bb.jpg")
+        #expect(artwork?.trackURL == "https://music/1800?i=2")
+        #expect(await fake.calls.contains { $0.entity == .musicArtist && $0.term == "bbno" })
+    }
+
+    @Test func artistCatalogStillRequiresAnExactTitleMatch() async {
+        let other = ITunesResult(
+            trackName: "inshallah", artistName: "bbno$", collectionName: "inshallah - Single",
+            artworkUrl100: "https://img/other/100x100bb.jpg", trackViewUrl: nil, artistViewUrl: nil, collectionViewUrl: nil)
+        let fake = FakeSearch([.musicArtist: [ITunesResult(artistName: "bbno$", artistId: 7)]])
+        let resolver = ITunesArtworkResolver(
+            search: { term, entity in await fake.search(term, entity) },
+            artistSongs: { _ in [other] })
+        #expect(await resolver.resolve(track) == nil)
+    }
+}

@@ -44,8 +44,9 @@ public struct Settings: Codable, Equatable, Sendable {
         case song
         /// Member list shows the artist.
         case artist
-        /// Member list shows "Apple Music".
-        case appName
+        /// Member list shows "Song – Artist". Discord can only show one line of the card there,
+        /// so the first line carries both and the second line shows the album instead.
+        case songAndArtist
     }
 
     public var showCoverArt = true
@@ -64,7 +65,10 @@ public struct Settings: Codable, Equatable, Sendable {
         showCoverArt = try c.decodeIfPresent(Bool.self, forKey: .showCoverArt) ?? true
         showButton = try c.decodeIfPresent(Bool.self, forKey: .showButton) ?? true
         clickableLinks = try c.decodeIfPresent(Bool.self, forKey: .clickableLinks) ?? true
-        statusDisplay = try c.decodeIfPresent(StatusDisplay.self, forKey: .statusDisplay) ?? .song
+        // Decoded by hand so a value this version no longer offers (the old "appName") falls back
+        // to the song instead of failing the whole file and resetting every setting.
+        statusDisplay = (try? c.decodeIfPresent(String.self, forKey: .statusDisplay))
+            .flatMap(StatusDisplay.init(rawValue:)) ?? .song
         startAtLogin = try c.decodeIfPresent(Bool.self, forKey: .startAtLogin) ?? true
         clientID = try c.decodeIfPresent(String.self, forKey: .clientID)
     }

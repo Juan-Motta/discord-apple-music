@@ -57,8 +57,29 @@ private let artwork = Artwork(
         #expect(try #require(makeActivity(playing, artwork: nil, now: now, settings: settings)).statusDisplayType == 2)
         settings.statusDisplay = .artist
         #expect(try #require(makeActivity(playing, artwork: nil, now: now, settings: settings)).statusDisplayType == 1)
-        settings.statusDisplay = .appName
-        #expect(try #require(makeActivity(playing, artwork: nil, now: now, settings: settings)).statusDisplayType == 0)
+        settings.statusDisplay = .songAndArtist
+        #expect(try #require(makeActivity(playing, artwork: nil, now: now, settings: settings)).statusDisplayType == 2)
+    }
+
+    @Test func songAndArtistPutsBothOnTheFirstLineAndTheAlbumOnTheSecond() throws {
+        var settings = Settings()
+        settings.statusDisplay = .songAndArtist
+        let activity = try #require(makeActivity(playing, artwork: artwork, now: now, settings: settings))
+        #expect(activity.statusDisplayType == 2)
+        #expect(activity.details == "Song – Artist")
+        #expect(activity.state == "Album")
+        #expect(activity.detailsURL == "https://music/track")
+        #expect(activity.stateURL == "https://music/album")
+    }
+
+    @Test func songAndArtistKeepsTheArtistWhenThereIsNoAlbum() throws {
+        var settings = Settings()
+        settings.statusDisplay = .songAndArtist
+        let single = PlaybackSnapshot.playing(Track(id: "S", title: "Song", artist: "Artist", album: "", duration: 200), position: 0)
+        let activity = try #require(makeActivity(single, artwork: artwork, now: now, settings: settings))
+        #expect(activity.details == "Song – Artist")
+        #expect(activity.state == "Artist")
+        #expect(activity.stateURL == "https://music/artist")
     }
 
     @Test func encodesDiscordFieldNames() throws {
@@ -132,6 +153,12 @@ private let artwork = Artwork(
 
     @Test func runsWhenTheSessionStartIsUnknown() {
         #expect(!shouldSkipLaunch(settings: off, now: now, sessionStart: nil, lastStartRequest: nil))
+    }
+
+    @Test func theRemovedAppNameOptionFallsBackToSongAndKeepsOtherSettings() throws {
+        let settings = try JSONDecoder().decode(Settings.self, from: Data(#"{"statusDisplay":"appName","showButton":false}"#.utf8))
+        #expect(settings.statusDisplay == .song)
+        #expect(!settings.showButton)
     }
 
     @Test func olderSettingsFilesDefaultToStartingAtLogin() throws {

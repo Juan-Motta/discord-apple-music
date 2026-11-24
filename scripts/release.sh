@@ -46,6 +46,10 @@ if [[ "$PUBLISH" == 1 ]]; then
     echo "==> Checking release preconditions for $TAG"
     REPO="$(gh repo view --json nameWithOwner --jq .nameWithOwner 2>/dev/null || true)"
     [[ -n "$REPO" ]] || fail "Cannot resolve the GitHub repository (is gh logged in?)."
+    # gh may have several accounts; act as the repository owner whichever one is active.
+    if [[ -z "${GH_TOKEN:-}" ]] && OWNER_TOKEN="$(gh auth token -u "${REPO%%/*}" 2>/dev/null)"; then
+        export GH_TOKEN="$OWNER_TOKEN"
+    fi
     [[ -z "$(git status --porcelain)" ]] || fail "Working tree is not clean; commit first."
     [[ "$(git branch --show-current)" == "main" ]] || fail "Publish from main."
     git fetch -q origin main --tags

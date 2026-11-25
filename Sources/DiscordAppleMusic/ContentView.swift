@@ -227,8 +227,7 @@ private struct DiscordCard: View {
                     if let playing {
                         link(playing.title ?? "", playing.trackURL, font: .headline, color: Discord.text)
                         link(playing.artist ?? "", playing.artistURL, font: .subheadline, color: Discord.secondaryText)
-                        // Discord's card shows two lines; the album is only a third line here
-                        // when it isn't already the second one ("Song + artist" puts it there).
+                        // Discord shows the album (the cover's text) as a third line.
                         if let album = playing.album, album != playing.artist {
                             link(album, playing.albumURL, font: .subheadline, color: Discord.secondaryText)
                         }

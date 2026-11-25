@@ -61,15 +61,16 @@ private let artwork = Artwork(
         #expect(try #require(makeActivity(playing, artwork: nil, now: now, settings: settings)).statusDisplayType == 2)
     }
 
-    @Test func songAndArtistPutsBothOnTheFirstLineAndTheAlbumOnTheSecond() throws {
+    @Test func songAndArtistPutsBothOnTheFirstLineAndKeepsArtistAndAlbumBelow() throws {
         var settings = Settings()
         settings.statusDisplay = .songAndArtist
         let activity = try #require(makeActivity(playing, artwork: artwork, now: now, settings: settings))
         #expect(activity.statusDisplayType == 2)
         #expect(activity.details == "Song – Artist")
-        #expect(activity.state == "Album")
+        #expect(activity.state == "Artist")
+        #expect(activity.assets?.largeText == "Album")
         #expect(activity.detailsURL == "https://music/track")
-        #expect(activity.stateURL == "https://music/album")
+        #expect(activity.stateURL == "https://music/artist")
     }
 
     @Test func songAndArtistKeepsTheArtistWhenThereIsNoAlbum() throws {

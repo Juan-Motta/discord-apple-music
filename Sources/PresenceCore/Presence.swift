@@ -70,13 +70,12 @@ public func makeActivity(_ snapshot: PlaybackSnapshot, artwork: Artwork?, now: D
     let title = track.title.isEmpty ? "Unknown track" : track.title
     let artist = track.artist.isEmpty ? "Unknown artist" : track.artist
     let combined = settings.statusDisplay == .songAndArtist
-    let albumOnSecondLine = combined && !track.album.isEmpty
 
     var activity = Activity(
         type: ActivityType.listening,
         statusDisplayType: statusDisplayType,
         details: fitText(combined ? "\(title) – \(artist)" : title),
-        state: fitText(albumOnSecondLine ? track.album : artist)
+        state: fitText(artist)
     )
 
     if track.duration > 0 {
@@ -95,7 +94,7 @@ public func makeActivity(_ snapshot: PlaybackSnapshot, artwork: Artwork?, now: D
     }
     if settings.clickableLinks {
         activity.detailsURL = artwork.trackURL
-        activity.stateURL = albumOnSecondLine ? artwork.albumURL : artwork.artistURL
+        activity.stateURL = artwork.artistURL
     }
     if settings.showButton, let trackURL = artwork.trackURL {
         activity.buttons = [.init(label: "Listen on Apple Music", url: trackURL)]

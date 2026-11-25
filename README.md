@@ -52,7 +52,7 @@ Open the app again to turn it off or change what's shown. The card at the top pr
 - cover art
 - clickable song, artist and album
 - the "Listen on Apple Music" button
-- what the member list shows next to your name: song, artist, or song + artist (then the card's second line shows the album)
+- what the member list shows next to your name: song, artist, or song + artist
 
 The app is in English and Spanish; it follows your Mac's language, or pick one under **About → Language**. The **About** tab also has a link to report a bug, and shows the app's version. When a newer release is out, an **Update** button downloads it, checks that it's signed by the same developer, and restarts the app on the new version.
 
